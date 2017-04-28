@@ -78,16 +78,19 @@ inline boost::shared_ptr<CoupledVegfPelletDiffusionReactionPde<DIM> > GetPde()
 }
 
 inline boost::shared_ptr<Part<2> > Get2DCircleDomain(units::quantity<unit::length> pellet_height,
-        units::quantity<unit::length> cornea_radius, units::quantity<unit::length> pellet_radius)
+        units::quantity<unit::length> cornea_radius, units::quantity<unit::length> pellet_radius, bool usePellet=true)
 {
     units::quantity<unit::length> reference_length = BaseUnits::Instance()->GetReferenceLengthScale();
     units::quantity<unit::length> delta = pellet_height-cornea_radius+pellet_radius;
     boost::shared_ptr<Part<2> > p_domain = Part<2> ::Create();
     p_domain->AddCircle(cornea_radius, DimensionalChastePoint<2>(0.0, 0.0, 0.0));
-    boost::shared_ptr<Polygon<2> > p_polygon = p_domain->AddCircle(pellet_radius,
-            DimensionalChastePoint<2>(0.0, -delta/reference_length, 0.0, reference_length));
-    p_polygon->LabelAllEdges("Inner Boundary");
-    p_domain->AddHoleMarker(DimensionalChastePoint<2>(0.0, -delta/reference_length, 0.0, reference_length));
+    if(usePellet)
+    {
+        boost::shared_ptr<Polygon<2> > p_polygon = p_domain->AddCircle(pellet_radius,
+                DimensionalChastePoint<2>(0.0, -delta/reference_length, 0.0, reference_length));
+        p_polygon->LabelAllEdges("Inner Boundary");
+        p_domain->AddHoleMarker(DimensionalChastePoint<2>(0.0, -delta/reference_length, 0.0, reference_length));
+    }
     return p_domain;
 }
 

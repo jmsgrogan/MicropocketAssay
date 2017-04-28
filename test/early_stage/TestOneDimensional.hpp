@@ -42,7 +42,10 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 #include <iostream>
 #include <fstream>
+#include <numeric>
 #include <boost/lexical_cast.hpp>
+#include <vtkSmartPointer.h>
+#include <vtkPoints.h>
 #include "SmartPointers.hpp"
 #include "UblasIncludes.hpp"
 #include "Part.hpp"
@@ -57,6 +60,12 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AbstractCellBasedWithTimingsTestSuite.hpp"
 #include "CoupledLumpedSystemFiniteElementSolver.hpp"
 #include "SetUpDomainsAndPdes.hpp"
+#include "FunctionMap.hpp"
+#include "OffLatticeMigrationRule.hpp"
+#include "OffLatticeSproutingRule.hpp"
+#include "AngiogenesisSolver.hpp"
+#include "DensityMap.hpp"
+#include "VesselNetworkWriter.hpp"
 
 #include "PetscAndVtkSetupAndFinalize.hpp"
 
@@ -65,10 +74,9 @@ class TestOneDimensionalDomain : public AbstractCellBasedWithTimingsTestSuite
 
 public:
 
-    void TestTransportOnly() throw(Exception)
+    void xTestTransportOnly() throw(Exception)
     {
         InitializeReferenceScales();
-
         units::quantity<unit::length> pellet_height = 1.0e-3*unit::metres;
         units::quantity<unit::length> cornea_radius = 1.3e-3*unit::metres;
 
@@ -121,6 +129,156 @@ public:
                 outfile << boost::lexical_cast<std::string>(c_numerical_nondim) << ",";
             }
             outfile << "\n";
+        }
+        outfile.close();
+    }
+
+    void TestVesselsOnly() throw(Exception)
+    {
+        MAKE_PTR_ARGS(OutputFileHandler, p_output_file_handler, ("TestOneDimensionalDomain/TestVesselOnly"));
+        InitializeReferenceScales();
+        RandomNumberGenerator::Instance()->Reseed(12345);
+
+        units::quantity<unit::length> reference_length = BaseUnits::Instance()->GetReferenceLengthScale();
+        units::quantity<unit::length> pellet_height = 1.2e-3*unit::metres;
+        units::quantity<unit::length> cornea_radius = (1.0e-3)*unit::metres;
+
+        boost::shared_ptr<Part<2> > p_domain = Get2DPlaneDomain(pellet_height, cornea_radius);
+        boost::shared_ptr<RegularGrid<2> > p_grid = RegularGrid<2>::Create();
+        units::quantity<unit::length> spacing(40.0*unit::microns); //um
+        p_grid->GenerateFromPart(p_domain, spacing);
+
+        // Prescribe a linearly increasing vegf field using a function map
+        boost::shared_ptr<FunctionMap<2> > p_funciton_map = FunctionMap<2>::Create();
+        p_funciton_map->SetGrid(p_grid);
+        std::vector<units::quantity<unit::concentration> > vegf_field = std::vector<units::quantity<unit::concentration> >(p_grid->GetNumberOfPoints(), 0.0*unit::mole_per_metre_cubed);
+        for (unsigned idx = 0; idx < p_grid->GetNumberOfPoints(); idx++)
+        {
+            vegf_field[idx] = 0.3*(p_grid->GetPoint(idx).GetLocation(reference_length)[1] / (pellet_height/reference_length))*1.e-9*unit::mole_per_metre_cubed;
+        }
+
+        p_funciton_map->SetFileHandler(p_output_file_handler);
+        p_funciton_map->SetFileName("Function");
+        p_funciton_map->SetLabel("vegf");
+        p_funciton_map->UpdateSolution(vegf_field);
+        p_funciton_map->Write();
+
+        //Set up the limbal vessel
+        VesselNetworkGenerator<2> generator;
+        unsigned divisions = unsigned(2.0*M_PI*cornea_radius/spacing) - 2; // divide the vessel to coincide with grid
+        unsigned alignment_axis = 0; // pointing x direction
+        boost::shared_ptr<VesselNetwork<2> > p_network = generator.GenerateSingleVessel(cornea_radius*2.0*M_PI,
+                                                                                        DimensionalChastePoint<2>(0.0, 5.0, 0.0, spacing),
+                                                                                            divisions, alignment_axis);
+
+        for(unsigned idx=0;idx<p_network->GetNodes().size();idx++)
+        {
+            p_network->GetNodes()[idx]->GetFlowProperties()->SetPressure(1.0*unit::pascals);
+        }
+
+        boost::shared_ptr<OffLatticeMigrationRule<2> > p_migration_rule = OffLatticeMigrationRule<2>::Create();
+        p_migration_rule->SetDiscreteContinuumSolver(p_funciton_map);
+        p_migration_rule->SetNetwork(p_network);
+        p_migration_rule->SetAttractionStrength(0.0);
+        p_migration_rule->SetChemotacticStrength(0.0);
+        p_migration_rule->SetPersistenceAngleSdv((2.0/180.0)*M_PI);
+
+        boost::shared_ptr<OffLatticeSproutingRule<2> > p_sprouting_rule = OffLatticeSproutingRule<2>::Create();
+        p_sprouting_rule->SetDiscreteContinuumSolver(p_funciton_map);
+        p_sprouting_rule->SetVesselNetwork(p_network);
+        p_sprouting_rule->SetSproutingProbability(0.5 /(3600.0*unit::seconds));
+        p_sprouting_rule->SetOnlySproutIfPerfused(true);
+        p_sprouting_rule->SetTipExclusionRadius(40.0e-6*unit::metres);
+
+        AngiogenesisSolver<2> angiogenesis_solver;
+        angiogenesis_solver.SetVesselNetwork(p_network);
+        angiogenesis_solver.SetMigrationRule(p_migration_rule);
+        angiogenesis_solver.SetSproutingRule(p_sprouting_rule);
+        angiogenesis_solver.SetOutputFileHandler(p_output_file_handler);
+        angiogenesis_solver.SetBoundingDomain(p_domain);
+        angiogenesis_solver.SetDoAnastomosis(true);
+
+        SimulationTime::Instance()->SetEndTimeAndNumberOfTimeSteps(48.0, 96);
+        // Set up a vessel network writer
+        boost::shared_ptr<VesselNetworkWriter<2> > p_network_writer = VesselNetworkWriter<2>::Create();
+
+        boost::shared_ptr<RegularGrid<2> > p_denisty_map_grid = RegularGrid<2>::Create();
+        units::quantity<unit::length> density_grid_spacing(80.0*unit::microns); //um
+        p_denisty_map_grid->GenerateFromPart(p_domain, density_grid_spacing);
+
+        // Set up the sample lines and output files
+        units::quantity<unit::length> sample_spacing_x = 40.0e-6*unit::metres;
+        units::quantity<unit::length> sample_spacing_y = 20.0e-6*unit::metres;
+        unsigned num_sample_points_x = 2.0*M_PI*cornea_radius/sample_spacing_x + 1u;
+        unsigned num_sample_points_y = (pellet_height-200.0e-6*unit::metres)/sample_spacing_y + 1u;
+
+        std::ofstream outfile;
+        std::string file_name = p_output_file_handler->GetOutputDirectoryFullPath()+"sampled_line_density.txt";
+        outfile.open(file_name.c_str());
+        outfile << "Time, ";
+
+        std::vector<vtkSmartPointer<vtkPoints> > sample_lines;
+        for(unsigned idx=0; idx<num_sample_points_y; idx++)
+        {
+            vtkSmartPointer<vtkPoints> p_sample_points = vtkSmartPointer<vtkPoints>::New();
+            for(unsigned jdx=0; jdx<num_sample_points_x; jdx++)
+            {
+                p_sample_points->InsertNextPoint(double(jdx)*(sample_spacing_x/reference_length),
+                        (double(idx)*sample_spacing_y)/reference_length+200.0, 0.0);
+            }
+            sample_lines.push_back(p_sample_points);
+            outfile << boost::lexical_cast<std::string>(double(double(idx)*sample_spacing_y/reference_length)) << ",";
+        }
+        outfile << "\n";
+
+        // Loop for the duration of the simulation time
+        while (!SimulationTime::Instance()->IsFinished())
+        {
+            boost::shared_ptr<DensityMap<2> > p_density_map = DensityMap<2>::Create();
+            p_density_map->SetGrid(p_denisty_map_grid);
+            p_density_map->SetVesselNetwork(p_network);
+
+            boost::shared_ptr<FunctionMap<2> > p_density_map_result = FunctionMap<2>::Create();
+            p_density_map_result->SetGrid(p_denisty_map_grid);
+            p_density_map_result->SetVesselNetwork(p_network);
+            p_density_map_result->SetFileHandler(p_output_file_handler);
+            p_density_map_result->SetFileName("/line_density"
+                    + boost::lexical_cast<std::string>(SimulationTime::Instance()->GetTimeStepsElapsed()));
+            p_density_map_result->UpdateSolution(p_density_map->rGetVesselLineDensity());
+            p_density_map_result->Write();
+
+            // Sample the density map
+            double time = SimulationTime::Instance()->GetTime();
+            outfile << boost::lexical_cast<std::string>(time) << ",";
+            for(unsigned idx=0;idx<sample_lines.size();idx++)
+            {
+                std::vector<double> solution = p_density_map_result->GetSolution(sample_lines[idx]);
+                double sum = std::accumulate(solution.begin(), solution.end(), 0.0);
+                double mean = sum / solution.size();
+                outfile << boost::lexical_cast<std::string>(mean) << ",";
+            }
+            outfile << std::endl;
+
+            p_density_map_result->SetFileName("/tip_density"
+                    + boost::lexical_cast<std::string>(SimulationTime::Instance()->GetTimeStepsElapsed()));
+            p_density_map_result->UpdateSolution(p_density_map->rGetVesselTipDensity());
+            p_density_map_result->Write();
+
+            p_density_map_result->SetFileName("/branch_density"
+                    + boost::lexical_cast<std::string>(SimulationTime::Instance()->GetTimeStepsElapsed()));
+            p_density_map_result->UpdateSolution(p_density_map->rGetVesselBranchDensity());
+            p_density_map_result->Write();
+
+            p_network_writer->SetFileName(
+                    p_output_file_handler->GetOutputDirectoryFullPath() + "/vessel_network_"
+                            + boost::lexical_cast<std::string>(SimulationTime::Instance()->GetTimeStepsElapsed())
+                            + ".vtp");
+            p_network_writer->SetVesselNetwork(p_network);
+            p_network_writer->Write();
+
+            // Increment the solver and simulation time
+            angiogenesis_solver.Increment();
+            SimulationTime::Instance()->IncrementTimeOneStep();
         }
         outfile.close();
     }

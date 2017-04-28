@@ -1,4 +1,3 @@
-TestTipSensing.hpp
 TestCoupledVegfOdeSystem.hpp
 early_stage/TestOneDimensional.hpp
 early_stage/TestTwoDimensional.hpp

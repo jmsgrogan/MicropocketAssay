@@ -1,39 +1,33 @@
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
-import csv
 
-workdir = "/home/grogan/test/"
+matplotlib.rcParams.update({'font.size': 14})
 
+def get_distance_circle(L, d0=40.0, R0=1300):
+    return (d0/R0)*np.ones(L.size)
 
-concentration_samples = []
-locations = []
+def get_distance_hemisphere(L, d0=40.0, R0=1300):
+    return (d0/R0)*np.sin(L/R0)
 
-#case_dir = workdir+"TestTwoDimensionalDomainCircular/TestTransportOnly/sample_values.txt"
-#case_dir = workdir+"TestTwoDimensionalDomain/TestTransportOnly/sample_values.txt"
-case_dir = workdir+"TestOneDimensionalDomain/TestTransportOnly/sample_values.txt"
-with open(case_dir, 'rb') as csvfile:
-    csv_reader = csv.reader(csvfile, delimiter=',')
-    current_day = -1
-    for idx, eachrow in enumerate(csv_reader):
-        if idx>0:
-            file_day = int(round(float(eachrow[0])/24.0))
-            if file_day>current_day:
-                print file_day
-                concentration_samples.append([float(i) for i in eachrow[1:-1]])
-                current_day = file_day
-        else:
-            locations = np.array([float(i) for i in eachrow[1:-1]])
+def get_density_circle(L, d0=40.0, R0=1300):
+    return 1.0/((1.0-L/R0)*(1.0-L/R0))
+
+def get_density_hemisphere(L, d0=40.0, R0=1300):
+    return np.tan(L/R0)*(1.0/np.cos(L/R0))/R0
+
+R0 = 1300
+locations = np.linspace(0.0, 0.5*R0, 100)
             
 fig, ax = plt.subplots()
-ax.set_ylim([0,0.8])
-ax.set_xlim([-1, 1])
+#ax.set_ylim([0,0.05])
+ax.set_xlim([0, 0.5])
+ax.set_xlabel(r'$\frac{L}{R_0}$')
+ax.set_ylabel(r'$\frac{-d \rho}{dL}\left(\frac{1}{\rho_0}\right)$')
 
-locations = (2.0*locations)/np.max(locations) - 1.0
-
-ax.plot(locations, concentration_samples[1], color='black')
-ax.plot(locations, concentration_samples[2], color='black')
-ax.plot(locations, concentration_samples[3], color='black')
-ax.plot(locations, concentration_samples[4], color='black')
-ax.plot(locations, concentration_samples[5], color='black')
-#ax.plot(locations, concentration_samples[6], color='blue')
+ax.plot(locations/R0, np.zeros(locations.size), color='red', label="Front On")
+ax.plot(locations/R0, get_density_circle(locations), color='black', label="Top Down")
+ax.plot(locations/R0, get_density_hemisphere(locations), color='green', label = "Hemisphere")
+plt.legend()
+plt.tight_layout()
 plt.show()
