@@ -2,6 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import csv
 
+import analytical_solutions.network_density
+import postprocessing.network_density
+
 def get_density_profile(x, t, c_50, c_p, h, epsilon, n_max, v, P_max):
     
     alpha = (h+epsilon)/(0+epsilon)
@@ -14,8 +17,7 @@ def get_density_profile(x, t, c_50, c_p, h, epsilon, n_max, v, P_max):
 workdir = "/home/grogan/test/"
 
 case_dir = workdir+"TestOneDimensionalDomain/TestVesselOnly/sampled_line_density.txt"
-results_1d = []
-locations_1d = []
+results_1d, locations_1d = postprocessing.network_density.process_csv()
 with open(case_dir, 'rb') as csvfile:
     csv_reader = csv.reader(csvfile, delimiter=',')
     
@@ -63,7 +65,7 @@ P_max = 0.5
 
 sampling_freq = 20
 for idx, eachResult in enumerate(results_1d[::sampling_freq]):
-    analytical = get_density_profile(x, eachResult[0], c_50, c_p, h, epsilon, n_max, v, P_max)
+    analytical = analytical_solutions.network_density.get_density_profile(x, eachResult[0], c_50, c_p, h, epsilon, n_max, v, P_max)
     ax.plot(x, analytical, color='red')
     ax.plot(locations_1d, np.array(eachResult[1]), color='black')
     ax.plot(locations_2d, np.array(results_2d[idx*sampling_freq][1]), color='green')

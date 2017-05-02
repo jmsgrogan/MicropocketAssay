@@ -1,14 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def get_density_profile(x, t, c_50, c_p, h, epsilon, n_max, v, P_max, beta):
-    
-    alpha = (h+epsilon)/(0+epsilon)
-    P = P_max*(1.0/(1.0+(c_50/c_p)*alpha))
-    n = np.exp(-(beta/v)*x)*n_max*(1.0-np.exp(-P*(t-x/v)))
-    out_of_bound_indices = x >v*t  
-    n[out_of_bound_indices] = 0.0
-    return n
+import analytical_solutions
 
 def do_plot(workdir):
     
@@ -29,13 +22,13 @@ def do_plot(workdir):
 
     results = [] 
     for eachTime in times:
-        results.append([eachTime, get_density_profile(x, eachTime, c_50, c_p, h, epsilon, n_max, v, P_max, beta)])   
+        results.append([eachTime, analytical_solutions.get_density_profile_with_sink(x, eachTime, c_50, c_p, h, epsilon, n_max, v, P_max, beta)])   
     for eachResult in results:
         ax.plot(x, eachResult[1], color='black')
        
     results = [] 
     for eachTime in times:
-        results.append([eachTime, get_density_profile(x, eachTime, c_50, c_p, h, epsilon, n_max, v, P_max, 0.0)])   
+        results.append([eachTime, analytical_solutions.get_density_profile_with_sink(x, eachTime, c_50, c_p, h, epsilon, n_max, v, P_max, 0.0)])   
     for eachResult in results:
         ax.plot(x, eachResult[1], color=colors[1])
             
