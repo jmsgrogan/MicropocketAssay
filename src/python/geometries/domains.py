@@ -125,6 +125,46 @@ def get_3d_circle_domain(domain_dimensions, reference_length):
     
     return domain, holes
 
+def get_3d_hemisphere_domain(domain_dimensions, reference_length):  
+    
+    generator = microvessel_chaste.geometry.MappableGridGenerator()
+    num_divisions_x = 20
+    num_divisions_y = 20
+    azimuth_angle = 1.0 * np.pi
+    polar_angle = 0.999 * np.pi
+    holes = microvessel_chaste.mesh.VectorDimensionalChastePoint3()
+    domain = generator.GenerateHemisphere(domain_dimensions["cornea radius"]/reference_length, 
+                                                     domain_dimensions["cornea thickness"]/reference_length,
+                                                     num_divisions_x, num_divisions_y, azimuth_angle, polar_angle);
+
+    if domain_dimensions["use pellet"]:
+        pellet_domain = microvessel_chaste.geometry.Part3()
+    
+        gap = (domain_dimensions["cornea thickness"] - domain_dimensions["pellet thickness"])/(2.0*reference_length)/4.0
+        base = domain_dimensions["cornea radius"]/reference_length + gap - domain_dimensions["cornea thickness"]/reference_length
+        pellet_domain.AddCylinder(domain_dimensions["pellet radius"], 
+                                  domain_dimensions["pellet thickness"], 
+                                  microvessel_chaste.mesh.DimensionalChastePoint3(0.0, 0.0, base, reference_length))
+    
+        # Rotate the part
+        polygons = pellet_domain.GetPolygons()
+        rotation_angle = np.pi/25.0
+        domain.RotateAboutAxis((0, 1, 0), rotation_angle)
+        #p_vegf_domain->RotateAboutAxis(rotation_axis, rotation_angle);
+        #pellet_centre.RotateAboutAxis(rotation_axis, rotation_angle);
+    
+        # Add the pellet domain to the cornea
+        domain.AppendPart(pellet_domain)
+        domain.AddHoleMarker(
+            microvessel_chaste.mesh.DimensionalChastePoint3(
+                0.0, 0.0, base + domain_dimensions["pellet thickness"]/(2.0*reference_length), reference_length))
+        holes.append(microvessel_chaste.mesh.DimensionalChastePoint3(
+                0.0, 0.0, base + domain_dimensions["pellet thickness"]/(2.0*reference_length), reference_length))
+        
+        for eachPolygon in polygons:
+            domain.GetFacet(eachPolygon.GetCentroid()).SetLabel("Pellet Interface")
+    return domain, holes
+
 def get_domain(domain_type, domain_dimensions, reference_length):
     
     if domain_type == "Planar 2D":
@@ -139,6 +179,9 @@ def get_domain(domain_type, domain_dimensions, reference_length):
     elif domain_type == "Circle 3D":
         return get_3d_circle_domain(domain_dimensions, reference_length)
     
+    elif domain_type == "Hemisphere 3D":
+        return get_3d_hemisphere_domain(domain_dimensions, reference_length)
+    
 if __name__ == '__main__':
     
     import chaste.core
@@ -149,8 +192,8 @@ if __name__ == '__main__':
     BaseUnits.Instance().SetReferenceLengthScale(reference_length)
     domain_dimensions = {"pellet height" : 1.0e-3*metre(),
                      "cornea radius" : 1.3e-3*metre(),
-                     "cornea thickness" : 80.0e-6*metre(),
-                     "pellet thickness" : 60.0e-6*metre(),
+                     "cornea thickness" : 100.0e-6*metre(),
+                     "pellet thickness" : 40.0e-6*metre(),
                      "grid spacing" : 40.0e-6*metre(),
                      "node spacing" : 40.0e-6*metre(),
                      "limbal offset" : 200.0e-6*metre(),
@@ -160,7 +203,7 @@ if __name__ == '__main__':
                      "use pellet" : False,
                      "pellet radius" : 300.0e-6*metre(),
                      }
-    domain_types = ["Planar 2D", "Planar 3D", "Circle 2D", "Circle 3D"]
+    domain_types = ["Planar 2D", "Planar 3D", "Circle 2D", "Circle 3D", "Hemisphere 3D"]
     
     # Write the domain
     for eachDomainType in domain_types:
@@ -168,7 +211,7 @@ if __name__ == '__main__':
         domain, holes = get_domain(eachDomainType, domain_dimensions, reference_length)
         domain.Write(file_handler.GetOutputDirectoryFullPath() + "part.vtp",
                      microvessel_chaste.geometry.GeometryFormat.VTP, False)
-        
+         
         if "2" in eachDomainType:
             generator = microvessel_chaste.mesh.DiscreteContinuumMeshGenerator2_2()
             mesh_writer = microvessel_chaste.mesh.MultiFormatMeshWriter2()
@@ -195,11 +238,17 @@ if __name__ == '__main__':
         else:
             generator = microvessel_chaste.mesh.DiscreteContinuumMeshGenerator3_3()
             mesh_writer = microvessel_chaste.mesh.MultiFormatMeshWriter3()
+        generator.SetMaxElementArea(1e4*(1.e-18*metre_cubed()))   
+
         generator.SetDomain(domain)
-        generator.SetMaxElementArea(1e4*(1.e-18*metre_cubed()))
         generator.SetHoles(holes)
         generator.Update()
-        mesh_writer.SetMesh(generator.GetMesh())
+        mesh = generator.GetMesh()
+        if "Hemisphere 3D" in eachDomainType:
+            rotation_angle = np.pi/25.0
+            domain.RotateAboutAxis((0, 1, 0), -rotation_angle)
+            mesh.Rotate((0, 1, 0), -4.0*rotation_angle)  
+        mesh_writer.SetMesh(mesh)
         mesh_writer.SetFilename(file_handler.GetOutputDirectoryFullPath() + "mesh_with_pellet")
         mesh_writer.Write()
         
