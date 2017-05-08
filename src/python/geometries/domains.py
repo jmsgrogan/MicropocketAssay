@@ -115,13 +115,14 @@ def get_3d_circle_domain(domain_dimensions, reference_length):
                 microvessel_chaste.mesh.DimensionalChastePoint3(0.0, -1.0*delta/reference_length, 0.0, reference_length), 24)
         pellet.Extrude(circle, domain_dimensions["pellet thickness"])
         pellet.Translate(microvessel_chaste.mesh.DimensionalChastePoint3(0.0, 0.0, gap, reference_length))
-        for eachFacet in pellet.GetFacets():
-            eachFacet.SetLabel("Pellet Interface")    
+        polygons = pellet.GetPolygons() 
         
         half_height = domain_dimensions["cornea thickness"]/(2.0*reference_length)
         domain.AddHoleMarker(microvessel_chaste.mesh.DimensionalChastePoint3(0.0, -1.0*delta/reference_length, half_height, reference_length))
         holes.append(microvessel_chaste.mesh.DimensionalChastePoint3(0.0, -1.0*delta/reference_length, half_height, reference_length))
         domain.AppendPart(pellet)
+        for eachPolygon in polygons:
+            domain.GetFacet(eachPolygon.GetCentroid()).SetLabel("Pellet Interface")
     
     return domain, holes
 

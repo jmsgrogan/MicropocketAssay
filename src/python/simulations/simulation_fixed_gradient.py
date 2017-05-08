@@ -107,7 +107,6 @@ def run(parameter_collection, work_dir, domain_type, random_seed, run_number):
     angiogenesis_solver.SetBoundingDomain(domain)
     angiogenesis_solver.SetDoAnastomosis(angiogenesis_parameters["do anastomosis"])
     
-
     num_steps = int(simulation_parameters["total time"]/simulation_parameters["time step"])
     chaste.cell_based.SimulationTime.Instance().SetEndTimeAndNumberOfTimeSteps(simulation_parameters["total time"], 
                                                                                num_steps)
@@ -127,7 +126,7 @@ def run(parameter_collection, work_dir, domain_type, random_seed, run_number):
     output_density_files = []
     for eachQuantity in output_density_quantities:
         output_file = open(file_handler.GetOutputDirectoryFullPath()+"Sampled_" + eachQuantity + "_density.txt", "w")
-        output_file.write("Time, ")
+        output_file.write("Time,")
         for eachLine in sample_lines:
             y_coord = eachLine.GetPoint(0)[1]
             output_file.write(str(y_coord)+",")        
@@ -150,7 +149,10 @@ def run(parameter_collection, work_dir, domain_type, random_seed, run_number):
             
             density_map_result.SetFileName("/" + eachQuantity + "_Density" + str(elapsed_time))
             calculation_method = getattr(density_map, 'rGetVessel' + eachQuantity + 'Density')
-            density_map_result.UpdateSolution(calculation_method())
+            if "Planar" in domain_type:
+                density_map_result.UpdateSolution(calculation_method())
+            else:
+                density_map_result.UpdateElementSolution(calculation_method())
             density_map_result.Write()
 
             # Sample the density map
@@ -192,6 +194,7 @@ if __name__ == '__main__':
                      "sample spacing z" : 20.0e-6*metre(),
                      "use pellet" : False,
                      "pellet radius" : 300.0e-6*metre(),
+                     "use finite pellet width" : False
                      }
     
     angiogenesis_parameters = {"attraction strength" : 0.0,
@@ -217,8 +220,8 @@ if __name__ == '__main__':
     
     work_dir = "Python/Cornea/TestSimulation/"
     domain_types = ["Planar 2D", "Planar 3D", "Circle 2D", "Circle 3D", "Hemisphere 3D"]
-    domain_types = ["Hemisphere 3D"]
-    random_seeds = [1234, 5678]
+    #domain_types = ["Planar 2D"]
+    random_seeds = [1234]
     
     for eachDomainType in domain_types:
         run_number = 0

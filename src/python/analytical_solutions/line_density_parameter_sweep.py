@@ -57,7 +57,7 @@ def vary_c_50(workdir):
             
 def vary_h(workdir):
     
-    x = np.linspace(0.0, 1000.0, 1000)
+    x = np.linspace(-1000.0, 1000.0, 1000)
     times = np.linspace(0.0, 48.0, 4)
     
     c_50 = 0.3

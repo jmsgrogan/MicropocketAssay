@@ -4,27 +4,42 @@ from microvessel_chaste.utility import * # Dimensional analysis: bring in all un
 
 def get_2d_planar_grid(domain, domain_dimensions):  
     
-    grid = microvessel_chaste.mesh.RegularGrid2()
-    grid.GenerateFromPart(domain, domain_dimensions["grid spacing"])
+    if not domain_dimensions["use finite pellet width"]:
+        grid = microvessel_chaste.mesh.RegularGrid2()
+        grid.GenerateFromPart(domain, domain_dimensions["grid spacing"])
+    else:
+        generator = microvessel_chaste.mesh.DiscreteContinuumMeshGenerator2_2()
+        generator.SetDomain(domain)
+        generator.SetMaxElementArea(5e4*(1.e-18*metre_cubed()))
+        generator.Update()  
+        grid = generator.GetMesh()     
     return grid
 
 def get_3d_planar_grid(domain, domain_dimensions):  
-    
-    grid = microvessel_chaste.mesh.RegularGrid3()
-    grid.GenerateFromPart(domain, domain_dimensions["grid spacing"])
+
+    if not domain_dimensions["use finite pellet width"]:    
+        grid = microvessel_chaste.mesh.RegularGrid3()
+        grid.GenerateFromPart(domain, domain_dimensions["grid spacing"])
+    else:
+        generator = microvessel_chaste.mesh.DiscreteContinuumMeshGenerator3_3()
+        generator.SetDomain(domain)
+        generator.SetMaxElementArea(5e4*(1.e-18*metre_cubed()))
+        generator.Update()  
+        grid = generator.GetMesh()   
     return grid
 
-def get_2d_circle_grid(domain, domain_dimensions, reference_length, holes = None):  
+def get_2d_circle_grid(domain, domain_dimensions, holes = None):  
     
     generator = microvessel_chaste.mesh.DiscreteContinuumMeshGenerator2_2()
     generator.SetDomain(domain)
     generator.SetMaxElementArea(5e4*(1.e-18*metre_cubed()))
+    
     if holes is not None and len(holes) is not 0:
         generator.SetHoles(holes)
     generator.Update()
     return generator.GetMesh()
 
-def get_3d_circle_grid(domain, domain_dimensions, reference_length, holes = None):  
+def get_3d_circle_grid(domain, domain_dimensions, holes = None):  
     
     generator = microvessel_chaste.mesh.DiscreteContinuumMeshGenerator3_3()
     generator.SetDomain(domain)
@@ -34,14 +49,13 @@ def get_3d_circle_grid(domain, domain_dimensions, reference_length, holes = None
     generator.Update()
     return generator.GetMesh()
 
-def get_3d_hemisphere_grid(domain, domain_dimensions, reference_length, holes = None):  
+def get_3d_hemisphere_grid(domain, domain_dimensions, holes = None):  
     
     generator = microvessel_chaste.mesh.DiscreteContinuumMeshGenerator3_3()
     generator.SetDomain(domain)
     generator.SetMaxElementArea(5e4*(1.e-18*metre_cubed()))
     if holes is not None and len(holes) is not 0:
         generator.SetHoles(holes)
-    
     generator.Update()
     mesh = generator.GetMesh()
 
