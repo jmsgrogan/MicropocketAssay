@@ -2,10 +2,38 @@
 Classes describing parameters
 """
 
+import random
+from copy import deepcopy
 import cPickle as pickle
 import chaste.core
 import microvessel_chaste.utility
 
+class Study():
+    
+    def __init__(self, work_dir, parameter_collection):
+        
+        self.work_dir = work_dir
+        self.parameter_collection = parameter_collection
+        self.range = []
+        self.random_realisations = 3
+        
+    def get_task_list(self):
+        
+        task_list = []
+        for eachParameterSet in self.range:
+            for idx in range(eachParameterSet[1]):
+                param = self.parameter_collection.get_parameter(eachParameterSet[0])
+                param_range = (param.max - param.min)*param.value
+                param_value = param.min*param.value + float(idx)/float(eachParameterSet[1])*param_range
+                for jdx in range(self.random_realisations):
+                    local_collection = deepcopy(self.parameter_collection)
+                    local_collection.random_seed = random.randint(0, 1e6)
+                    local_collection.get_parameter(eachParameterSet[0]).value = param_value
+                    simulation_path = self.work_dir + "/" + eachParameterSet[0].replace(" ", "") + "/"
+                    simulation_path += "ParameterValue"+str(idx)+"/RandomRealisation"+str(jdx)+"/"
+                    task_list.append([simulation_path, local_collection])
+        return task_list
+        
 class SimulationParameterCollection:
     
     def __init__(self, random_seed = 1234):
@@ -26,7 +54,7 @@ class SimulationParameterCollection:
             self.collection, self.random_seed = pickle.load(fp) 
             
     def get_parameter(self, name):
-        return collection[name] 
+        return self.collection[name] 
      
 class Parameter:
     
@@ -39,7 +67,10 @@ class Parameter:
         self.max = max_val
         self.value_as_string = ""
         self.store_value_as_string()
-        self.unit_dict = {"m" : "metre"}
+        self.unit_dict = {"m" : "metre",
+                          "s" : "second",
+                          "s^-1" : "per_second",
+                          "Hz" : "per_second"}
         self.symbol = symbol
         self.nice_name = nice_name
         

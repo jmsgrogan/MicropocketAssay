@@ -33,24 +33,6 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#include <vector>
-#include <string>
-#include <math.h>
-#include <boost/lexical_cast.hpp>
-#include "SmartPointers.hpp"
-#include "UblasIncludes.hpp"
-#include "Part.hpp"
-#include "UnitCollection.hpp"
-#include "CoupledVegfPelletDiffusionReactionPde.hpp"
-#include "CoupledLumpedSystemFiniteDifferenceSolver.hpp"
-#include "VesselNetwork.hpp"
-#include "VesselNetworkGenerator.hpp"
-#include "DiscreteContinuumBoundaryCondition.hpp"
-#include "DiscreteContinuumMesh.hpp"
-#include "DiscreteContinuumMeshGenerator.hpp"
-#include "CoupledLumpedSystemFiniteElementSolver.hpp"
-#include "SetUpDomainsAndPdes.hpp"
-
 void DoNothing()
 {
 

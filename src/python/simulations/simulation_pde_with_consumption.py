@@ -247,7 +247,7 @@ if __name__ == '__main__':
                       "vegf decay rate" : (-0.8/3600.0) * per_second(),
                       "pde time increment" : 0.1,
                       "pellet binding constant" : 100.0,
-                      "include vessel sink" : False,
+                      "include vessel sink" : True,
                       "vegf blood concentration" : 0.0*mole_per_metre_cubed(),
                       "vessel permeability" : (3.e-4/3600.0)*metre_per_second(),
                       "uptake rate per cell" : (4.e-22/3600.0)*mole_per_second()
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     
     parameter_collection = [domain_dimensions, angiogenesis_parameters, pde_parameters, simulation_parameters] 
     
-    work_dir = "Python/Cornea/TestSimulationPde/"
+    work_dir = "Python/Cornea/TestSimulationPdeSink/"
     domain_types = ["Planar 2D", "Planar 3D", "Circle 2D", "Circle 3D", "Hemisphere 3D"]
     #domain_types = ["Circle 3D"]
     random_seeds = [1234]

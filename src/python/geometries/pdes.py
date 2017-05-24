@@ -28,8 +28,8 @@ def get_transient_pde(domain_type, domain_dimensions, pde_parameters, reference_
             vessel_vegf_sink = microvessel_chaste.pde.VesselBasedDiscreteSource3()
         vessel_vegf_sink.SetReferenceConcentration(pde_parameters["vegf blood concentration"])
         vessel_vegf_sink.SetVesselPermeability(pde_parameters["vessel permeability"])
-        vessel_vegf_sink.SetReferenceHaematocrit(0.45);
-        vessel_vegf_sink.SetUptakeRatePerCell(-pde_parameters["uptake rate per cell"]);
+        vessel_vegf_sink.SetReferenceHaematocrit(0.45*dimensionless());
+        vessel_vegf_sink.SetUptakeRatePerCell(-1.0*pde_parameters["uptake rate per cell"]);
         pde.AddDiscreteSource(vessel_vegf_sink)  
     return pde
 
@@ -46,7 +46,7 @@ def get_2d_planar_solver(pde, grid, domain, domain_dimensions, pde_parameters,
         boundary_condition.SetValue(pde_parameters["pellet concentration"])
         boundary_condition.SetType(microvessel_chaste.pde.BoundaryConditionType.EDGE)
         boundary_condition.SetIsRobin(True)
-        boundary_condition.SetLabelName("Pellet Interface")
+        boundary_condition.SetLabel("Pellet Interface")
         boundary_condition.SetDomain(domain)
         
         solver = microvessel_chaste.pde.CoupledLumpedSystemFiniteElementSolver2()
@@ -63,7 +63,7 @@ def get_2d_circle_solver(pde, grid, domain, domain_dimensions, pde_parameters,
     boundary_condition.SetValue(pde_parameters["pellet concentration"])
     boundary_condition.SetType(microvessel_chaste.pde.BoundaryConditionType.EDGE)
     boundary_condition.SetIsRobin(True)
-    boundary_condition.SetLabelName("Pellet Interface")
+    boundary_condition.SetLabel("Pellet Interface")
     boundary_condition.SetDomain(domain)
     
     solver = microvessel_chaste.pde.CoupledLumpedSystemFiniteElementSolver2()
@@ -78,9 +78,9 @@ def get_3d_circle_solver(pde, grid, domain, domain_dimensions, pde_parameters,
     
     boundary_condition = microvessel_chaste.pde.DiscreteContinuumBoundaryCondition3()
     boundary_condition.SetValue(pde_parameters["pellet concentration"])
-    boundary_condition.SetType(microvessel_chaste.pde.BoundaryConditionType.FACET)
+    boundary_condition.SetType(microvessel_chaste.pde.BoundaryConditionType.POLYGON)
     boundary_condition.SetIsRobin(True)
-    boundary_condition.SetLabelName("Pellet Interface")
+    boundary_condition.SetLabel("Pellet Interface")
     boundary_condition.SetDomain(domain)
     
     solver = microvessel_chaste.pde.CoupledLumpedSystemFiniteElementSolver3()
@@ -95,9 +95,9 @@ def get_3d_hemisphere_solver(pde, grid, domain, domain_dimensions, pde_parameter
     
     boundary_condition = microvessel_chaste.pde.DiscreteContinuumBoundaryCondition3()
     boundary_condition.SetValue(pde_parameters["pellet concentration"])
-    boundary_condition.SetType(microvessel_chaste.pde.BoundaryConditionType.FACET)
+    boundary_condition.SetType(microvessel_chaste.pde.BoundaryConditionType.POLYGON)
     boundary_condition.SetIsRobin(True)
-    boundary_condition.SetLabelName("Pellet Interface")
+    boundary_condition.SetLabel("Pellet Interface")
     boundary_condition.SetDomain(domain)
     
     solver = microvessel_chaste.pde.CoupledLumpedSystemFiniteElementSolver3()
@@ -118,9 +118,9 @@ def get_3d_planar_solver(pde, grid, domain, domain_dimensions, pde_parameters,
     else:
         boundary_condition = microvessel_chaste.pde.DiscreteContinuumBoundaryCondition3()
         boundary_condition.SetValue(pde_parameters["pellet concentration"])
-        boundary_condition.SetType(microvessel_chaste.pde.BoundaryConditionType.FACET)
+        boundary_condition.SetType(microvessel_chaste.pde.BoundaryConditionType.POLYGON)
         boundary_condition.SetIsRobin(True)
-        boundary_condition.SetLabelName("Pellet Interface")
+        boundary_condition.SetLabel("Pellet Interface")
         boundary_condition.SetDomain(domain)
         
         solver = microvessel_chaste.pde.CoupledLumpedSystemFiniteElementSolver3()
