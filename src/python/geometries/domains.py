@@ -208,6 +208,7 @@ if __name__ == '__main__':
     # Write the domain
     for eachDomainType in domain_types:
         file_handler = chaste.core.OutputFileHandler(work_dir + "/" + eachDomainType.replace(" ", ""), True)
+        print file_handler.GetOutputDirectoryFullPath()
         domain, holes = get_domain(eachDomainType, domain_dimensions, reference_length)
         domain.Write(file_handler.GetOutputDirectoryFullPath() + "part.vtp",
                      microvessel_chaste.geometry.GeometryFormat.VTP, True)
@@ -221,7 +222,7 @@ if __name__ == '__main__':
         generator.SetDomain(domain)
         generator.SetMaxElementArea(1e4*(1.e-18*metre_cubed()))
         generator.Update()
-        mesh_writer.SetMesh(generator.GetMesh())
+        mesh_writer.SetMesh(generator.GetMesh(), True)
         mesh_writer.SetFileName(file_handler.GetOutputDirectoryFullPath() + "mesh")
         mesh_writer.Write()
         
@@ -248,7 +249,7 @@ if __name__ == '__main__':
             rotation_angle = np.pi/25.0
             domain.RotateAboutAxis((0, 1, 0), -rotation_angle)
             mesh.Rotate((0, 1, 0), -4.0*rotation_angle)  
-        mesh_writer.SetMesh(mesh)
+        mesh_writer.SetMesh(mesh, True)
         mesh_writer.SetFileName(file_handler.GetOutputDirectoryFullPath() + "mesh_with_pellet")
         mesh_writer.Write()
         
