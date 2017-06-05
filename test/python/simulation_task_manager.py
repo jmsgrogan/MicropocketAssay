@@ -7,8 +7,8 @@ import time
 from mpi4py import MPI
 from microvessel_chaste.utility import *
 
-import parameter_collection
-from parameter_collection import SimulationParameterCollection, Parameter  
+import parameters.parameter_collection
+from parameters.parameter_collection import SimulationParameterCollection, Parameter  
 
 def launch(work_dir):
     
@@ -33,7 +33,7 @@ def launch(work_dir):
                                        min_val = 0.1, max_val = 10.0) )   
     
     # Set up the study
-    study = parameter_collection.Study(work_dir, collection)
+    study = parameters.parameter_collection.Study(work_dir, collection)
     study.range = [["sprouting probability", 5]]
     study.random_realisations = 3
     task_list = study.get_task_list()
