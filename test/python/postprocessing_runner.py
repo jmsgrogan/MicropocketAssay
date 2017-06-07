@@ -5,6 +5,7 @@ from symfit import Parameter, variables, Fit, exp
 import chaste.core
 import analytical_solutions.network_density
 import postprocessing.network_density
+import postprocessing.concentration_field
 
 def run(work_dir, domain_types, num_repeats):
     
@@ -15,14 +16,33 @@ def run(work_dir, domain_types, num_repeats):
 
         line_density_locations, line_densities = postprocessing.network_density.process_csv(results_dir+"Sampled_Line_density.txt")
         tip_density_locations, tip_densities = postprocessing.network_density.process_csv(results_dir+"Sampled_Tip_density.txt")
+        conc_field_locations, conc_field = postprocessing.concentration_field.process_csv(results_dir+"Sampled_PDE.txt")
+        
         
         # Plot the line density 
         fig, ax = plt.subplots()
-        #ax.set_ylim([0, 0.04])
-        ax.set_xlim([0, 1000])
-        sampling_freq = 20
+        #ax.set_ylim([0, 0.003])
+        #ax.set_xlim([0, 1000])
+        sampling_freq = 10
         for idx, eachResult in enumerate(line_densities[::sampling_freq]):
             ax.plot(line_density_locations, np.array(eachResult[1]), color='black')
+            
+        # Plot the tip density 
+        fig, ax = plt.subplots()
+        #ax.set_ylim([0, 0.04])
+        #ax.set_xlim([0, 1000])
+        sampling_freq = 10
+        for idx, eachResult in enumerate(tip_densities[::sampling_freq]):
+            ax.plot(tip_density_locations, np.array(eachResult[1]), color='black')   
+            
+        # Plot the conc field 
+        fig, ax = plt.subplots()
+        #ax.set_ylim([0, 0.04])
+        #ax.set_xlim([0, 1000])
+        sampling_freq = 10
+        for idx, eachResult in enumerate(conc_field[::sampling_freq]):
+            ax.plot(conc_field_locations, np.array(eachResult[1]), color='black')               
+        plt.show()
 
 # #         # Fit the line density
 #         cumulative_x = []
@@ -49,22 +69,13 @@ def run(work_dir, domain_types, num_repeats):
 #         
 #         print(fit_result)
 
-        # Plot the tip density 
-        fig, ax = plt.subplots()
-        #ax.set_ylim([0, 0.04])
-        ax.set_xlim([0, 1000])
-        sampling_freq = 20
-        for idx, eachResult in enumerate(tip_densities[::sampling_freq]):
-            ax.plot(tip_density_locations, np.array(eachResult[1]), color='black')            
-        plt.show()
-
 if __name__ == '__main__':
 
-    file_handler = chaste.core.OutputFileHandler("Python/Cornea/TestSimulation/", False)
+    file_handler = chaste.core.OutputFileHandler("Python/Cornea/TestSimulationPdeSink/", False)
     work_dir = file_handler.GetOutputDirectoryFullPath()
 
     domain_types = ["Planar 2D", "Planar 3D", "Circle 2D", "Circle 3D", "Hemisphere 3D"]
-    domain_types = ["Planar 2D"]
+    domain_types = ["Hemisphere 3D"]
     num_repeats = 1
 
     run(work_dir, domain_types, num_repeats)
