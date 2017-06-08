@@ -2,6 +2,7 @@
 Classes describing parameters
 """
 
+import os
 import random
 from copy import deepcopy
 import cPickle as pickle
@@ -54,6 +55,13 @@ class SimulationParameterCollection:
     def save(self, file_name):
         with open(file_name, 'wb') as fp:
             pickle.dump([self.collection, self.random_seed], fp)  
+            
+        # Human friendly version
+        output_file = open(os.path.splitext(file_name)[0]+".csv", "w")
+        for eachKey in self.collection.keys():
+            param = self.collection[eachKey]
+            output_file.write(param.name + " , " + str(param.value) + "\n")
+        output_file.close()
             
     def load(self, file_name):
         with open(file_name, 'rb') as fp:

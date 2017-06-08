@@ -10,11 +10,12 @@ def get_2d_planar_domain(parameter_collection, reference_length):
     
     cornea_radius = parameter_collection.get_parameter("cornea radius").value
     pellet_height = parameter_collection.get_parameter("pellet height").value
+    limbal_offset = parameter_collection.get_parameter("limbal offset").value
     use_pellet = parameter_collection.get_parameter("use pellet").value
     
     domain = microvessel_chaste.geometry.Part2()
     domain_width = 2.0*np.pi*cornea_radius
-    domain_height = pellet_height
+    domain_height = pellet_height + limbal_offset
     holes = microvessel_chaste.mesh.VectorDimensionalChastePoint2()
     if not use_pellet:
         domain.AddRectangle(domain_width, 
@@ -49,10 +50,11 @@ def get_3d_planar_domain(parameter_collection, reference_length):
     pellet_radius = parameter_collection.get_parameter("pellet radius").value
     pellet_thickness = parameter_collection.get_parameter("pellet thickness").value
     use_pellet = parameter_collection.get_parameter("use pellet").value
+    limbal_offset = parameter_collection.get_parameter("limbal offset").value
     
     domain = microvessel_chaste.geometry.Part3()
     domain_width = 2.0*np.pi*cornea_radius
-    domain_height = pellet_height
+    domain_height = pellet_height + limbal_offset
     holes = microvessel_chaste.mesh.VectorDimensionalChastePoint3()
     
     if not use_pellet:
@@ -97,9 +99,10 @@ def get_2d_circle_domain(parameter_collection, reference_length):
     cornea_radius = parameter_collection.get_parameter("cornea radius").value
     pellet_height = parameter_collection.get_parameter("pellet height").value
     pellet_radius = parameter_collection.get_parameter("pellet radius").value
+    limbal_offset = parameter_collection.get_parameter("limbal offset").value
     use_pellet = parameter_collection.get_parameter("use pellet").value 
     
-    delta = pellet_height-cornea_radius+pellet_radius
+    delta = pellet_height + limbal_offset -cornea_radius+pellet_radius
     domain = microvessel_chaste.geometry.Part2()
     domain.AddCircle(cornea_radius, 
                        microvessel_chaste.mesh.DimensionalChastePoint2(0.0, 0.0, 0.0), 24)
@@ -119,9 +122,10 @@ def get_3d_circle_domain(parameter_collection, reference_length):
     pellet_height = parameter_collection.get_parameter("pellet height").value
     pellet_radius = parameter_collection.get_parameter("pellet radius").value
     pellet_thickness = parameter_collection.get_parameter("pellet thickness").value
+    limbal_offset = parameter_collection.get_parameter("limbal offset").value
     use_pellet = parameter_collection.get_parameter("use pellet").value
     
-    delta = pellet_height-cornea_radius+pellet_radius
+    delta = pellet_height + limbal_offset -cornea_radius+pellet_radius
     domain = microvessel_chaste.geometry.Part3()
     circle = domain.AddCircle(cornea_radius, 
                        microvessel_chaste.mesh.DimensionalChastePoint3(0.0, 0.0, 0.0), 24)
@@ -152,6 +156,7 @@ def get_3d_hemisphere_domain(parameter_collection, reference_length):
     pellet_height = parameter_collection.get_parameter("pellet height").value
     pellet_radius = parameter_collection.get_parameter("pellet radius").value
     pellet_thickness = parameter_collection.get_parameter("pellet thickness").value
+    limbal_offset = parameter_collection.get_parameter("limbal offset").value
     use_pellet = parameter_collection.get_parameter("use pellet").value 
     
     generator = microvessel_chaste.geometry.MappableGridGenerator()
@@ -175,7 +180,7 @@ def get_3d_hemisphere_domain(parameter_collection, reference_length):
     
         # Rotate the part
         polygons = pellet_domain.GetPolygons()
-        rotation_angle = np.arccos(float((pellet_height+pellet_radius)/cornea_radius))
+        rotation_angle = np.arccos(np.round(float((pellet_height+pellet_radius+limbal_offset)/cornea_radius)))
         pellet_centre = microvessel_chaste.mesh.DimensionalChastePoint3(
                 0.0, 0.0, base + pellet_thickness/(2.0*reference_length), reference_length)
         pellet_domain.RotateAboutAxis((0, 1, 0), rotation_angle)
@@ -208,6 +213,7 @@ def get_domain(domain_type, parameter_collection, reference_length):
 if __name__ == '__main__':
     
     import chaste.core
+    from microvessel_chaste.utility import *
     import cornea.parameters.default_parameters
     
     work_dir = "Python/Cornea/TestDomains/"
@@ -217,6 +223,7 @@ if __name__ == '__main__':
     domain_types = ["Planar 2D", "Planar 3D", "Circle 2D", "Circle 3D", "Hemisphere 3D"]
     
     # Write the domain
+    parameter_collection.get_parameter("use pellet").value = False
     for eachDomainType in domain_types:
         file_handler = chaste.core.OutputFileHandler(work_dir + "/" + eachDomainType.replace(" ", ""), True)
         print file_handler.GetOutputDirectoryFullPath()

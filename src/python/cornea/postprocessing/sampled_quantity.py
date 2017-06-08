@@ -14,7 +14,7 @@ def process_csv(file_name):
         for idx, eachrow in enumerate(csv_reader):
             if idx==0:
                 locations = eachrow[1:-1]
-                locations = [float(x) for x in locations]
+                locations = [np.abs(float(x)) for x in locations]
             else:
                 time = float(eachrow[0])
                 samples = eachrow[1:-1]

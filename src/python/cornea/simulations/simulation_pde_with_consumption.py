@@ -52,7 +52,7 @@ if __name__ == '__main__':
             parameter_collection.get_parameter("run number").value = run_number
             parameter_collection.get_parameter("random seed").value = eachSeed
             local_work_dir = work_dir + "/DomainType_" + eachDomainType.replace(" ", "") + "/Run_" + str(run_number)
-            simulation = cornea.simulations.base_simulation.BaseSimulation(parameter_collection, work_dir)
+            simulation = cornea.simulations.base_simulation.BaseSimulation(parameter_collection, local_work_dir)
             simulation.run()
             run_number += 1
     

@@ -18,7 +18,8 @@ def get_transient_pde(domain_type, parameter_collection, reference_length, refer
     vegf_blood_concentration = parameter_collection.get_parameter("vegf blood concentration").value 
     vegf_permeability = parameter_collection.get_parameter("vessel permeability").value 
     uptake_rate_per_cell = parameter_collection.get_parameter("uptake rate per cell").value
-    include_sink = parameter_collection.get_parameter("include vessel sink").value
+    include_sink = (parameter_collection.get_parameter("include vessel sink").value and 
+                    not parameter_collection.get_parameter("use pde only"))
     
     pde.SetIsotropicDiffusionConstant(vegf_diffusivity)
     pde.SetContinuumLinearInUTerm(vegf_decay_rate)

@@ -30,6 +30,7 @@ def run_simulation(work_dir):
     
     print "Exiting on local: ", intracom.Get_rank(), " on global: ", intercom.Get_rank()
     intercom.send(1, dest=0, tag=1234)
+    intercom.Disconnect()
 
 if __name__=="__main__":
     

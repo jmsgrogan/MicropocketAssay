@@ -22,13 +22,13 @@ _default_collection.add_parameter(Parameter("cornea thickness", 100.0e-6*metre()
 _default_collection.add_parameter(Parameter("pellet height", 1.0e-3*metre(),
                                            min_val = 0.8, max_val = 1.2, symbol = "h", 
                                            nice_name = "Pellet Height"))
-_default_collection.add_parameter(Parameter("pellet radius", 300.0e-6*metre(),
+_default_collection.add_parameter(Parameter("pellet radius", 200.0e-6*metre(),
                                            min_val = 1.0, max_val = 1.0, symbol = "r", 
                                            nice_name = "Pellet Radius")) 
 _default_collection.add_parameter(Parameter("pellet thickness", 40.0e-6*metre(),
                                            min_val = 1.0, max_val = 1.0, symbol = "r", 
                                            nice_name = "Pellet Thickness")) 
-_default_collection.add_parameter(Parameter("limbal offset", 200.0e-6*metre(),
+_default_collection.add_parameter(Parameter("limbal offset", 100.0e-6*metre(),
                                            min_val = 1.0, max_val = 1.0, symbol = "\epsilon", 
                                            nice_name = "Limbal Offset")) 
 
@@ -55,7 +55,7 @@ _default_collection.add_parameter(Parameter("sample spacing z", 20.0e-6*metre(),
                                            nice_name = "Sample Spacing Z"))  
 
 # Domain Switches
-_default_collection.add_parameter(Parameter("use pellet", False))  
+_default_collection.add_parameter(Parameter("use pellet", True))  
 _default_collection.add_parameter(Parameter("use finite pellet width", False)) 
 
 # Angiogenesis details

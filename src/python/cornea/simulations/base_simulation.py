@@ -63,6 +63,7 @@ class BaseSimulation():
         self.reference_concentration = 1.e-6*mole_per_metre_cubed()
         self.output_density_quantities = ["Line", "Branch", "Tip"]
         self.domain = None
+        self.holes = None
         self.grid = None
         self.network = None
         self.pde_solver = None
@@ -80,14 +81,13 @@ class BaseSimulation():
         
     def set_up_domain(self):
         
-        domain, _ = cornea.geometries.domains.get_domain(self.domain_type, 
+        self.domain, self.holes = cornea.geometries.domains.get_domain(self.domain_type, 
                                                         self.parameter_collection, 
                                                         self.reference_length)
-        self.domain = domain
         
     def set_up_grid(self):
         
-        self.grid = cornea.geometries.grid.get_grid(self.domain_type, self.domain, self.parameter_collection)
+        self.grid = cornea.geometries.grid.get_grid(self.domain_type, self.domain, self.parameter_collection, holes=self.holes)
         
     def set_up_vessel_network(self):
         
@@ -97,7 +97,7 @@ class BaseSimulation():
         
     def set_up_pde_solver(self, file_handler):
         
-        if not self.parameter_collection.get_parameter("use fixed gradient"):
+        if not self.parameter_collection.get_parameter("use fixed gradient").value:
             pde = cornea.geometries.pdes.get_transient_pde(self.domain_type, self.parameter_collection, 
                                             self.reference_length, self.reference_concentration)
             
@@ -111,7 +111,9 @@ class BaseSimulation():
             self.pde_solver.SetTargetTimeIncrement(pde_time_increment) # hours
             self.pde_solver.SetUseCoupling(True)
             self.pde_solver.SetWriteIntermediateSolutions(False, int(2.0/pde_time_increment)) # every 2 hours  
-            pde.GetDiscreteSources()[0].SetDensityMap(self.pde_solver.GetDensityMap())
+            
+            if len(pde.GetDiscreteSources())>0:
+                pde.GetDiscreteSources()[0].SetDensityMap(self.pde_solver.GetDensityMap())
             
             if self.network is not None:
                 self.pde_solver.GetDensityMap().SetVesselNetwork(self.network) 
@@ -178,7 +180,7 @@ class BaseSimulation():
         else:
             self.denisty_map_grid = self.grid
         
-    def do_sampling(self, output_file, solver, time):  
+    def do_sampling(self, output_file, solver, time, mult_factor=1.0):  
             
         output_file.write(str(time) + ",")
         for idx in range(self.num_samples_y):
@@ -188,7 +190,7 @@ class BaseSimulation():
                 solution = solver.GetSolutionP(self.sample_lines[sample_index])
                 mean += np.mean(np.array(solution))
             mean /= float(self.num_samples_z)
-            output_file.write(str(mean) + ",")              
+            output_file.write(str(mean*mult_factor) + ",")              
         output_file.write("\n")
         output_file.flush()
                 
@@ -198,12 +200,13 @@ class BaseSimulation():
         chaste.cell_based.SimulationTime.Instance().SetStartTime(0.0)
         chaste.core.RandomNumberGenerator.Instance().Reseed(self.random_seed)
         file_handler = chaste.core.OutputFileHandler(self.work_dir, True)
-        pde_only = self.parameter_collection.get_parameter("use pde only").value        
+        pde_only = self.parameter_collection.get_parameter("use pde only").value    
         self.parameter_collection.save(file_handler.GetOutputDirectoryFullPath() + "/adopted_parameter_collection.p")
         
+        use_fixed_gradient = self.parameter_collection.get_parameter("use fixed gradient").value
         print "Running Simulation in: ", file_handler.GetOutputDirectoryFullPath()
         print "With Domain Type: ", self.domain_type
-        print "With Fixed Gradient: ", self.parameter_collection.get_parameter("use fixed gradient").value
+        print "With Fixed Gradient: ", use_fixed_gradient
         print "With PDE Only: ", pde_only
         
         self.initialize_reference_scales()
@@ -232,6 +235,7 @@ class BaseSimulation():
         self.get_sample_points()
         self.set_up_sampling_grid()
 
+        cornea_radius = float(self.parameter_collection.get_parameter("cornea radius").value/self.reference_length)
         if not pde_only:
             output_density_files = []
             for eachQuantity in self.output_density_quantities:
@@ -239,8 +243,15 @@ class BaseSimulation():
                                    eachQuantity + "_density.txt", "w")
                 output_file.write("Time, ")
                 for eachLine in self.sample_lines[0:self.num_samples_y]:
-                    y_coord = eachLine.GetPoint(0)[1]
-                    output_file.write(str(y_coord)+",")        
+                    y_coord = 0.0;
+                    if "Circle" in self.domain_type:
+                        y_coord = cornea_radius + eachLine.GetPoint(0)[1]
+                    elif "Hemisphere" in self.domain_type:
+                        z_coord = eachLine.GetPoint(0)[2]
+                        y_coord = cornea_radius*np.arctan(z_coord/cornea_radius)
+                    else:
+                        y_coord = eachLine.GetPoint(0)[1]
+                    output_file.write(str(y_coord)+",")                                
                 output_file.write("\n")
                 output_density_files.append(output_file)
             
@@ -248,8 +259,15 @@ class BaseSimulation():
         pde_output_file = open(file_handler.GetOutputDirectoryFullPath()+"Sampled_PDE.txt", "w")
         pde_output_file.write("Time, ")
         for eachLine in self.sample_lines[0:self.num_samples_y]:
-            y_coord = eachLine.GetPoint(0)[1]
-            pde_output_file.write(str(y_coord)+",")        
+            y_coord = 0.0;
+            if "Circle" in self.domain_type:
+                y_coord = cornea_radius + eachLine.GetPoint(0)[1]
+            elif "Hemisphere" in self.domain_type:
+                z_coord = eachLine.GetPoint(0)[2]
+                y_coord = cornea_radius*np.arctan(z_coord/cornea_radius)
+            else:
+                y_coord = eachLine.GetPoint(0)[1]
+            pde_output_file.write(str(y_coord)+",")            
         pde_output_file.write("\n") 
             
         # Do the solve
@@ -260,7 +278,7 @@ class BaseSimulation():
             elapsed_time = chaste.cell_based.SimulationTime.Instance().GetTimeStepsElapsed()
             time = chaste.cell_based.SimulationTime.Instance().GetTime()
             
-            if not self.parameter_collection.get_parameter("use fixed gradient"):
+            if not use_fixed_gradient:
                 pde_time_increment = self.parameter_collection.get_parameter("pde time increment").value  
                 self.pde_solver.SetStartTime(old_time)
                 if time==old_time:
@@ -274,7 +292,7 @@ class BaseSimulation():
                     print e.GetMessage
                 
             # Sample the pde
-            self.do_sampling(pde_output_file, self.pde_solver, time)
+            self.do_sampling(pde_output_file, self.pde_solver, time, mult_factor=1e3)
             
             if not pde_only:
                 density_map = getattr(microvessel_chaste.pde, 'DensityMap' + dimension)()

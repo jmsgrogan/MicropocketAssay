@@ -3,6 +3,7 @@
 import sys
 import os
 import random
+from random import shuffle
 import time
 from mpi4py import MPI
 
@@ -35,7 +36,6 @@ def launch(work_dir):
     
     # Set up the study
     study = cornea.parameters.parameter_collection.Study(work_dir, default_parameter_collection)
-
     study.range = [["sprouting probability", 1]]
     study.random_realisations = 1
     task_list = study.get_task_list()
@@ -50,6 +50,7 @@ def launch(work_dir):
     new_rank = new_comm.Get_rank()
     
     # Work through the tasks
+    shuffle(task_list)
     task_indices = get_task_indices(rank, size, task_list)
     for eachTaskIndex in task_indices:
         eachTask = task_list[eachTaskIndex]
@@ -65,15 +66,16 @@ def launch(work_dir):
         # Launch the task
         module_location = cornea.simulations.__file__
         print "Launching task " + str(eachTaskIndex) + " on rank:", rank, " of ", size
-        newercomm = new_comm.Spawn("python", args=[os.path.dirname(module_location)+"/simulation_runner.py", "-i "+ file_handler.GetRelativePath()], maxprocs=1)
+        newercomm = new_comm.Spawn(sys.executable, args=[os.path.dirname(module_location)+"/simulation_runner.py", "-i "+ file_handler.GetRelativePath()], maxprocs=1)
         data = newercomm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
         source = status.Get_source()
         tag = status.Get_tag()
         print "Completed task " + str(eachTaskIndex) + " on rank:",  rank, " of ", size
         print "Source: ", source, " Tag ", tag
         
-    # Shutdown
-    #comm.Disconnect()
+        # Shutdown
+        newercomm.Disconnect()
+    new_comm.Disconnect()
 
 if __name__ == "__main__":
     work_dir = "Python/Cornea/ParamSweep/"

@@ -1,81 +1,84 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from symfit import Parameter, variables, Fit, exp
 
 import chaste.core
-import analytical_solutions.network_density
-import postprocessing.network_density
-import postprocessing.concentration_field
+import cornea.postprocessing.sampled_quantity
+import cornea.postprocessing.do_fitting
 
-def run(work_dir, domain_types, num_repeats):
+class OutputParameter():
+    
+    def __init__(self, name, title, limits=None, line_color="black", sampling_frequency=10):
+        
+        self.name = name
+        self.title = title
+        self.limits = limits
+        self.line_color = line_color
+        self.sampling_frequency = sampling_frequency
+
+def make_figure(work_dir, locations, values, eachParam, x_title=r"Position - $\mu m$"):
+    
+    fig, ax = plt.subplots()
+    
+    if eachParam.limits is not None:
+        if eachParam.limits[0] is not None:
+            ax.set_xlim(eachParam.limits[0])
+        if eachParam.limits[1] is not None:
+            ax.set_ylim(eachParam.limits[1])
+    
+    ax.axvline(100.0, color='C2', linestyle='--', lw=1)
+    ax.axvline(1100.0, color='C3', linestyle='--', lw=1)
+    ax.set_xlabel(x_title) 
+    ax.set_ylabel(eachParam.title) 
+    
+    max_result = 0.0
+    for idx, eachResult in enumerate(values[::eachParam.sampling_frequency]):
+        ax.plot(locations, np.array(eachResult[1]), color=eachParam.line_color, lw=1)
+        local_max = np.max(np.array(eachResult[1]))
+        if local_max > max_result:
+            max_result = local_max
+            
+    ylim = ax.get_ylim()
+    ax.set_ylim([0, ylim[1]])
+    
+    ax.annotate('Limbus', xy=(150, max_result*0.99), color="C2")
+    ax.annotate('Pellet', xy=(950, max_result*0.99), color="C3")
+        
+    fig.savefig(work_dir,bbox_inches='tight',dpi=300) 
+    
+def run(work_dir, domain_types, output_params, num_repeats):
     
     # Get the density profiles
     for eachDomainType in domain_types:
         sample_number = 0
-        results_dir = work_dir + "/" + eachDomainType.replace(" ", "")+"/Run" + str(sample_number)+"/"
-
-        line_density_locations, line_densities = postprocessing.network_density.process_csv(results_dir+"Sampled_Line_density.txt")
-        tip_density_locations, tip_densities = postprocessing.network_density.process_csv(results_dir+"Sampled_Tip_density.txt")
-        conc_field_locations, conc_field = postprocessing.concentration_field.process_csv(results_dir+"Sampled_PDE.txt")
         
+        for eachParam in output_params:
         
-        # Plot the line density 
-        fig, ax = plt.subplots()
-        #ax.set_ylim([0, 0.003])
-        #ax.set_xlim([0, 1000])
-        sampling_freq = 10
-        for idx, eachResult in enumerate(line_densities[::sampling_freq]):
-            ax.plot(line_density_locations, np.array(eachResult[1]), color='black')
-            
-        # Plot the tip density 
-        fig, ax = plt.subplots()
-        #ax.set_ylim([0, 0.04])
-        #ax.set_xlim([0, 1000])
-        sampling_freq = 10
-        for idx, eachResult in enumerate(tip_densities[::sampling_freq]):
-            ax.plot(tip_density_locations, np.array(eachResult[1]), color='black')   
-            
-        # Plot the conc field 
-        fig, ax = plt.subplots()
-        #ax.set_ylim([0, 0.04])
-        #ax.set_xlim([0, 1000])
-        sampling_freq = 10
-        for idx, eachResult in enumerate(conc_field[::sampling_freq]):
-            ax.plot(conc_field_locations, np.array(eachResult[1]), color='black')               
-        plt.show()
+            results_dir = work_dir + "/DomainType_" + eachDomainType.replace(" ", "")+"/Run_" + str(sample_number)+"/"
+            results_dir += "Sampled_" + eachParam.name
+            locations, values  = cornea.postprocessing.sampled_quantity.process_csv(results_dir + ".txt")
 
-# #         # Fit the line density
-#         cumulative_x = []
-#         cumulative_t = []
-#         cumulative_z = []
-#         for eachResult in line_densities:
-#             cumulative_x.extend(list(line_density_locations))
-#             cumulative_t.extend(list(np.ones(len(eachResult[1]))*eachResult[0]))
-#             cumulative_z.extend(eachResult[1])
-# #             break
-# #             
-# #         # Need to remove 0 valued regions
-#         Z, X, T = variables('Z, X, T')
-#         v = Parameter(value = 1.0)
-#         n = Parameter(value = 1/40.0)
-#         #p = Parameter(value = 0.1, min = 0.0, max = 100.0)
-# #       model = {Z: n*(1.0 - exp(-p*(T-X/v)))}
-#         model = {Z: n*(1.0 - v*T*(X-200.0)/1000.0)}
-# 
-#         fit = Fit(model, X=np.array(cumulative_x), T=np.array(cumulative_t), Z=np.array(cumulative_z))
-#         fit_result = fit.execute()
-#         n_fit = fit_result.value(n)
-#         v_fit = fit_result.value(v)
-#         
-#         print(fit_result)
+            #cornea.postprocessing.do_fitting.fit(locations, values)
+            make_figure(results_dir+".png", locations, values, eachParam)
 
 if __name__ == '__main__':
 
-    file_handler = chaste.core.OutputFileHandler("Python/Cornea/TestSimulationPdeSink/", False)
+    file_handler = chaste.core.OutputFileHandler("Python/Cornea/ParamSweep/ParamName_sproutingprobability/ParamValue_0", False)
     work_dir = file_handler.GetOutputDirectoryFullPath()
 
     domain_types = ["Planar 2D", "Planar 3D", "Circle 2D", "Circle 3D", "Hemisphere 3D"]
-    domain_types = ["Hemisphere 3D"]
+    #domain_types = ["Planar 2D", "Circle 2D",]
+    
+    output_params = [OutputParameter(name = "Line_density", title = r"Line Density - $\mu m$ per $\mu m^3$",
+                                     limits = None, line_color = "black"),
+                     OutputParameter(name = "Tip_density", title = r"Tip Density - $\mu m^-3$",
+                                     limits = None, line_color = "black"),
+                     OutputParameter(name = "Branch_density", title = r"Branch Density - $\mu m^-3$",
+                                     limits = None, line_color = "black"),
+                     OutputParameter(name = "PDE", title = r"Concentration - $mole$ per $\mu m^3$",
+                                     limits = None, line_color = "black"),]
+    
+    output_params = [OutputParameter(name = "PDE", title = r"Concentration - nanomolar",
+                                     limits = [[0, 1200], None], line_color = "C0", sampling_frequency=10),]
+    
     num_repeats = 1
-
-    run(work_dir, domain_types, num_repeats)
+    run(work_dir, domain_types, output_params, num_repeats)

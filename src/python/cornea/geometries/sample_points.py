@@ -11,7 +11,7 @@ def get_2d_planar_sample_points(parameter_collection, reference_length):
 
     domain_width = 2.0*np.pi*cornea_radius
     num_sample_points_x = int(float(domain_width/sample_spacing_x)) + 1
-    num_sample_points_y = int(float((pellet_height-limbal_offset)/sample_spacing_y)) + 1
+    num_sample_points_y = int(float((pellet_height)/sample_spacing_y)) + 1
 
     sample_lines = []
     for idx in range(num_sample_points_y):
@@ -38,7 +38,7 @@ def get_3d_planar_sample_points(parameter_collection, reference_length):
 
     domain_width = 2.0*np.pi*cornea_radius
     num_sample_points_x = int(float(domain_width/sample_spacing_x)) + 1
-    num_sample_points_y = int(float((pellet_height-limbal_offset)/sample_spacing_y)) + 1
+    num_sample_points_y = int(float((pellet_height)/sample_spacing_y)) + 1
     num_sample_points_z = int(float(conrea_thickness/sample_spacing_z)) + 1
     
     sample_lines = []
