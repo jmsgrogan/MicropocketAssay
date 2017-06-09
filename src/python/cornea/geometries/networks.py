@@ -75,7 +75,7 @@ def get_2d_circle_vessel_network(parameter_collection, reference_length):
         network.GetNodes()[idx].GetFlowProperties().SetPressure(1.0*pascal())        
     return network
 
-def get_3d_circle_vessel_network(domain_dimensions, reference_length):
+def get_3d_circle_vessel_network(parameter_collection, reference_length):
     
     cornea_radius = parameter_collection.get_parameter("cornea radius").value
     cornea_thickness = parameter_collection.get_parameter("cornea thickness").value

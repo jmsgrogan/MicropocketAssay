@@ -32,7 +32,7 @@ def launch(work_dir):
     random.seed(1234)
      
     default_parameter_collection = cornea.parameters.default_parameters.get_default_collection()
-    default_parameter_collection.get_parameter("use pde only").value = True
+    default_parameter_collection.get_parameter("total time").value = 72.0
     
     # Set up the study
     study = cornea.parameters.parameter_collection.Study(work_dir, default_parameter_collection)
@@ -66,7 +66,8 @@ def launch(work_dir):
         # Launch the task
         module_location = cornea.simulations.__file__
         print "Launching task " + str(eachTaskIndex) + " on rank:", rank, " of ", size
-        newercomm = new_comm.Spawn(sys.executable, args=[os.path.dirname(module_location)+"/simulation_runner.py", "-i "+ file_handler.GetRelativePath()], maxprocs=1)
+        newercomm = new_comm.Spawn(sys.executable, args=[os.path.dirname(module_location)+"/simulation_runner.py", "-i "+ 
+                                                         file_handler.GetRelativePath()], maxprocs=1)
         data = newercomm.recv(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
         source = status.Get_source()
         tag = status.Get_tag()
@@ -78,5 +79,5 @@ def launch(work_dir):
     new_comm.Disconnect()
 
 if __name__ == "__main__":
-    work_dir = "Python/Cornea/ParamSweep/"
+    work_dir = "Python/Cornea/ParamSweep_WithConsumption/"
     launch(work_dir)

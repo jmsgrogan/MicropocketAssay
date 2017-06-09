@@ -37,7 +37,7 @@ class Study():
                         local_collection.get_parameter("random seed").value = random.randint(0, 1e6)
                         local_collection.get_parameter(eachParameterSet[0]).value = param_value
                         simulation_path = self.work_dir + "/ParamName_" + eachParameterSet[0].replace(" ", "") + "/"
-                        simulation_path += "ParamValue_" + str(jdx) + "/DomainType_" + eachDomain.replace(" ", "") + "/Run_"+str(jdx)+"/"
+                        simulation_path += "ParamValue_" + str(idx) + "/DomainType_" + eachDomain.replace(" ", "") + "/Run_"+str(jdx)+"/"
                         task_list.append([simulation_path, local_collection])
         return task_list
         

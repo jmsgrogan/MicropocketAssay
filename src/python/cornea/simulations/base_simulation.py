@@ -212,11 +212,10 @@ class BaseSimulation():
         self.initialize_reference_scales()
         self.set_up_domain()
         self.set_up_grid()
-        
         if not pde_only:
             self.set_up_vessel_network()
         self.set_up_pde_solver(file_handler)
-        
+
         if not pde_only:
             self.set_up_angiogenesis_solver(file_handler)
         

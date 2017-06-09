@@ -1,5 +1,5 @@
 import time
-import chaste
+import chaste.core
 chaste.init()
 import microvessel_chaste
 from petsc4py import PETSc
@@ -16,8 +16,10 @@ def run_simulation(work_dir):
 
     print "Entering on local: ", intracom.Get_rank(), " on global: ", intercom.Get_rank(), " at: ", work_dir
     print "Proc name: ", MPI.Get_processor_name()
+    
+    file_handler = chaste.core.OutputFileHandler(work_dir, False)
     local_parameters = cornea.parameters.parameter_collection.SimulationParameterCollection()
-    local_parameters.load(work_dir+"/input_parameters.p")
+    local_parameters.load(file_handler.GetOutputDirectoryFullPath()+"/input_parameters.p")
     
     simulation = cornea.simulations.base_simulation.BaseSimulation(local_parameters, work_dir)
     
