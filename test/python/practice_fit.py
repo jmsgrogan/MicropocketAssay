@@ -64,9 +64,9 @@ def simple_evaluate_fit(coords, v, rho_max, k, a, beta):
         x_0 = v*t
         x_bar = x-x_0
         rho = rho_max*t/(a+t)
-        right_front = rho/(1.0 + np.exp(k*x_bar))
-        multiplier = 1.0/(1.0+np.exp(-beta*t*x_bar))                     
-        z = right_front  * multiplier  
+        right = 1.0/(1.0 + np.exp(k*(x-x_0)))
+        left = beta/(1.0 + np.exp(k*(x-x_0+0.7)))
+        z = rho*(right-left)
         z_fit.append(z)
     return z_fit
 
@@ -75,11 +75,11 @@ if __name__ == "__main__":
     #file_handler = chaste.core.OutputFileHandler("Python/Cornea/ParamSweep_WithConsumption/ParamName_sproutingprobability/ParamValue_0", False)
     file_handler = chaste.core.OutputFileHandler("Python/Cornea/TestSimulationFixedGradient/", False)
     work_dir = file_handler.GetOutputDirectoryFullPath()
-    #domain_types = ["Planar_2D"]
+    domain_types = ["Planar_2D"]
     
     domain_types = ["Planar_2D", "Planar_3D",  "Circle_2D", "Circle_3D", "Hemisphere"]
-    output_params = ["Line_density", "Tip_density", "Branch_density"]
-    #output_params = ["Line_density"]
+    #output_params = ["Line_density", "Tip_density", "Branch_density"]
+    output_params = ["Line_density"]
     
     for eachDomainType in domain_types:
         for eachOutputParam in output_params:
@@ -119,11 +119,11 @@ if __name__ == "__main__":
             k = Parameter(value = 1.0, min=0.1, max=40.0)
             ap = Parameter(value = 1.0, min=0.1, max=96.0)
             rho_0 = Parameter(value = 1.0, min=0.0, max=100.0)
-            beta = Parameter(value = 0.1, min=0.001, max=4000.0)
+            beta = Parameter(value = 0.01, min=0.000, max=4000.0)
             
             #model = {Z: ((rho_0 * T/(ap+T))/(1.0+exp(k*(X-v*T))))}
-            model = {Z: ((rho_0 * T/(ap+T))/(1.0+exp(k*(X-v*T))))*(1.0/(1.0+exp(-beta*t*(X-v*t))))}
-        #     
+            model = {Z: (rho_0 * T/(ap+T))*((1.0/(1.0+exp(k*(X-v*T)))) - (beta/(1.0+exp(-beta*t*(X-v*t+0.7)))))}
+
             x_norm = np.array(x_eval)/1000.0
             z_norm = np.array(z_eval)/0.02
             t_norm = np.array(t_eval)/96.0
