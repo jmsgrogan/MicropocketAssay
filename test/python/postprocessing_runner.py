@@ -65,21 +65,22 @@ def run(work_dir, domain_types, output_params, num_repeats):
 
 if __name__ == '__main__':
 
-    file_handler = chaste.core.OutputFileHandler("Python/Cornea/ParamSweep_WithConsumption/ParamName_sproutingprobability/ParamValue_0", False)
-    #file_handler = chaste.core.OutputFileHandler("Python/Cornea/TestSimulationPdeSink", False)
+    #file_handler = chaste.core.OutputFileHandler("Python/Cornea/ParamSweep_WithConsumption/ParamName_sproutingprobability/ParamValue_0", False)
+    file_handler = chaste.core.OutputFileHandler("Python/Cornea/TestSimulationFixedGradient", False)
     work_dir = file_handler.GetOutputDirectoryFullPath()
 
-    domain_types = ["Planar 2D", "Planar 3D", "Circle 2D", "Circle 3D", "Hemisphere 3D"]
-    domain_types = ["Planar 2D", "Circle 2D", "Circle 3D"]
+    domain_types = ["Planar_2D", "Planar_3D", "Circle_2D", "Circle_3D", "Hemisphere"]
+    
+    #domain_types = ["Planar_2D"]
     
     output_params = [OutputParameter(name = "Line_density", title = r"Line Density - $\mu m$ per $\mu m^3$",
-                                     limits = [[0, 1200], None], line_color = "C0", sampling_frequency=10),
+                                     limits = [[0, 1200], None], line_color = "C0", sampling_frequency=2),
                      OutputParameter(name = "Tip_density", title = r"Tip Density - $\mu m^{-3}$",
-                                     limits = [[0, 1200], None], line_color = "C0", sampling_frequency=10),
+                                     limits = [[0, 1200], None], line_color = "C0", sampling_frequency=2),
                      OutputParameter(name = "Branch_density", title = r"Branch Density - $\mu m^{-3}$",
-                                     limits = [[0, 1200], None], line_color = "C0", sampling_frequency=10),
+                                     limits = [[0, 1200], None], line_color = "C0", sampling_frequency=2),
                      OutputParameter(name = "PDE", title = r"Concentration - nanomolar",
-                                     limits = [[0, 1200], None], line_color = "C0", sampling_frequency=10),]
+                                     limits = [[0, 1200], None], line_color = "C0", sampling_frequency=2),]
     
 #     output_params = [OutputParameter(name = "PDE", title = r"Concentration - nanomolar",
 #                                      limits = [[0, 1200], None], line_color = "C0", sampling_frequency=10),]

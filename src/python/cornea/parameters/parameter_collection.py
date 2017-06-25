@@ -17,7 +17,7 @@ class Study():
         self.parameter_collection = parameter_collection
         self.range = []
         self.random_realisations = 3
-        self.simulation_domains = ["Planar 2D", "Circle 2D", "Planar 3D", "Circle 3D", "Hemisphere 3D"]
+        self.simulation_domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere_3D"]
         
     def get_task_list(self):
         
@@ -109,16 +109,15 @@ class Parameter:
     
     def update_value_from_string(self):
         split_string = self.value_as_string.split()
-
         if split_string[0] == "False":
             self.value = False
         elif split_string[0] == "True":
             self.value = True 
-        elif split_string[0] in ["Planar", "Circle", "Hemisphere"]:
+        elif split_string[0] in ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]:
             self.value = self.value_as_string 
         else:     
             self.value = float(split_string[0])
-        if len(split_string)>1 and not split_string[0] in ["Planar", "Circle", "Hemisphere"]:
+        if len(split_string)>1 and not split_string[0] in ["Planar_2D", "Circle_2D",  "Planar_3D", "Circle_3D", "Hemisphere"]:
             unit_name = ''.join(split_string[1:])
             self.value*=getattr(microvessel_chaste.utility, self.unit_dict[unit_name])() 
             

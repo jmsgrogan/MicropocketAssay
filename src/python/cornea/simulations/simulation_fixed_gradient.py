@@ -2,6 +2,7 @@ import chaste # Core Chaste functionality
 chaste.init() # Initialize MPI and PETSc
 
 import microvessel_chaste.simulation
+from microvessel_chaste.utility import *
 import cornea.parameters.default_parameters
         
 if __name__ == '__main__':
@@ -9,8 +10,14 @@ if __name__ == '__main__':
     work_dir = "Python/Cornea/TestSimulationFixedGradient/"
     parameter_collection = cornea.parameters.default_parameters.get_default_collection()
     parameter_collection.get_parameter("UseFixedGradient").value = True
+    parameter_collection.get_parameter("PelletConcentration").value = 1.e-10*mole_per_metre_cubed()
+    parameter_collection.get_parameter("TotalTime").value = 48.0*3600.0*second()
+    #parameter_collection.get_parameter("PersistenceAngle").value = 0.0
+    #parameter_collection.get_parameter("ChemotacticStrength").value = 0.0
+    parameter_collection.get_parameter("SampleSpacingX").value = 30.0e-6*metre()
+    #parameter_collection.get_parameter("OnlyPerfusedSprout").value = True
     
-    domain_types = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere_3D"]
+    domain_types = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
     #domain_types = ["Planar 2D"]
     random_seeds = [1234]
 
@@ -24,14 +31,18 @@ if __name__ == '__main__':
             
             if "2" in eachDomainType:
                 simulation = microvessel_chaste.simulation.CornealMicropocketSimulation2()
-            else 
+            else: 
                 simulation = microvessel_chaste.simulation.CornealMicropocketSimulation3()
             simulation.SetWorkDir(local_work_dir)
-            for eachParameter in parameter_collection.keys():
-                if eachParameter not in ["DomaintType"]:
-                    getattr(simulation, 'Set'+parameter_collection[eachParameter].name)(parameter_collection[eachParameter].value)
+            for eachParameter in parameter_collection.collection.keys():
+                if eachParameter not in ["DomainType"]:
+                    param_nam = parameter_collection.collection[eachParameter].name
+                    param_value = parameter_collection.collection[eachParameter].value
+                    getattr(simulation, 'Set'+param_nam)(param_value)
                     
-            simulation.SetDomainType(getattr(microvessel_chaste.simulation, "DomainType." + eachDomainType))
+            #print getattr(microvessel_chaste.simulation, "DomainType." + eachDomainType)
+            domain_type = microvessel_chaste.simulation.DomainType
+            simulation.SetDomainType(getattr(domain_type, eachDomainType.upper()))
 
             simulation.Run()
             run_number += 1

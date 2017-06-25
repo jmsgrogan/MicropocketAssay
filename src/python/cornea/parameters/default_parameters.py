@@ -12,7 +12,7 @@ from cornea.parameters.parameter_collection import Parameter
 _default_collection = cornea.parameters.parameter_collection.SimulationParameterCollection()
 
 # Domain Details
-_default_collection.add_parameter(Parameter("DomainType", "Planar2D"))
+_default_collection.add_parameter(Parameter("DomainType", "Planar_2D"))
 _default_collection.add_parameter(Parameter("CorneaRadius", 1.3e-3*metre(), 
                                            min_val = 1.0, max_val = 1.0, symbol = "R", 
                                            nice_name = "Cornea Radius"))
@@ -71,7 +71,7 @@ _default_collection.add_parameter(Parameter("ChemotacticStrength", 0.5,
 _default_collection.add_parameter(Parameter("PersistenceAngle", 5.0, 
                                            min_val = 0.0, max_val = 4.0, symbol = "\alpha", 
                                            nice_name = "Persistence Angle")) 
-_default_collection.add_parameter(Parameter("SproutVelocity", 20.0 *(1.e-6/3600.0) * metre_per_second(), 
+_default_collection.add_parameter(Parameter("TipVelocity", 20.0 *(1.e-6/3600.0) * metre_per_second(), 
                                            min_val = 0.1, max_val = 4.0, symbol = "v", 
                                            nice_name = "Persistence Angle")) 
 _default_collection.add_parameter(Parameter("TipExclusionRadius", 40.0e-6*metre(), 
@@ -80,6 +80,7 @@ _default_collection.add_parameter(Parameter("TipExclusionRadius", 40.0e-6*metre(
 
 # Angiogenesis switches
 _default_collection.add_parameter(Parameter("DoAnastamosis", True)) 
+_default_collection.add_parameter(Parameter("OnlyPerfusedSprout", False)) 
 
 # PDE Details
 _default_collection.add_parameter(Parameter("PelletConcentration", 0.3*mole_per_metre_cubed(), 
@@ -97,7 +98,7 @@ _default_collection.add_parameter(Parameter("VegfBindingConstant", 100.0,
 _default_collection.add_parameter(Parameter("VegfBloodConcentration", 0.0*mole_per_metre_cubed(), 
                                            min_val = 0.0, max_val = 1.0, symbol = "c_{b}", 
                                            nice_name = "VEGF Blood Concentration")) 
-_default_collection.add_parameter(Parameter("VesselPermeability", (3.e-4/3600.0)*metre_per_second(), 
+_default_collection.add_parameter(Parameter("VegfPermeability", (3.e-4/3600.0)*metre_per_second(), 
                                            min_val = 0.0, max_val = 1.0, symbol = "\rho_{p}", 
                                            nice_name = "Vessel Permeability")) 
 _default_collection.add_parameter(Parameter("UptakeRatePerCell", (4.e-18/3600.0)*mole_per_second(), 
@@ -113,8 +114,8 @@ _default_collection.add_parameter(Parameter("UseFixedGradient", False))
 _default_collection.add_parameter(Parameter("UsePdeOnly", False))
 
 # Simulation Details
-_default_collection.add_parameter(Parameter("TotalTime", 24)) 
-_default_collection.add_parameter(Parameter("TimeStepSize", 0.5)) 
+_default_collection.add_parameter(Parameter("TotalTime", 24.0*3600.0*second())) 
+_default_collection.add_parameter(Parameter("TimeStepSize", 0.5*3600.0*second())) 
 _default_collection.add_parameter(Parameter("RunNumber", 0)) 
 _default_collection.add_parameter(Parameter("RandomSeed", 0)) 
 
