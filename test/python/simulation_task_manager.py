@@ -8,6 +8,7 @@ import time
 from mpi4py import MPI
 
 import chaste.core
+from microvessel_chaste.utility import *
 import cornea.parameters.parameter_collection
 import cornea.parameters.default_parameters
 import cornea.simulations
@@ -32,12 +33,18 @@ def launch(work_dir):
     random.seed(1234)
      
     default_parameter_collection = cornea.parameters.default_parameters.get_default_collection()
-    default_parameter_collection.get_parameter("total time").value = 72.0
+    default_parameter_collection.get_parameter("UseFixedGradient").value = True
+    default_parameter_collection.get_parameter("PelletConcentration").value = 1.e-10*mole_per_metre_cubed()
+    default_parameter_collection.get_parameter("TotalTime").value = 72.0*3600.0*second()
+    #default_parameter_collection.get_parameter("PersistenceAngle").value = 0.0
+    #default_parameter_collection.get_parameter("ChemotacticStrength").value = 0.0
+    default_parameter_collection.get_parameter("SampleSpacingX").value = 30.0e-6*metre()
+    #default_parameter_collection.get_parameter("OnlyPerfusedSprout").value = True
     
     # Set up the study
     study = cornea.parameters.parameter_collection.Study(work_dir, default_parameter_collection)
-    study.range = [["sprouting probability", 1]]
-    study.random_realisations = 1
+    study.range = [["SproutingProbability", 4]]
+    study.random_realisations = 3
     task_list = study.get_task_list()
 
     # Set up comms
@@ -50,7 +57,7 @@ def launch(work_dir):
     new_rank = new_comm.Get_rank()
     
     # Work through the tasks
-    shuffle(task_list)
+    #shuffle(task_list)
     task_indices = get_task_indices(rank, size, task_list)
     for eachTaskIndex in task_indices:
         eachTask = task_list[eachTaskIndex]

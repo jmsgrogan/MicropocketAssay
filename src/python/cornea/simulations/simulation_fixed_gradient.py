@@ -40,7 +40,6 @@ if __name__ == '__main__':
                     param_value = parameter_collection.collection[eachParameter].value
                     getattr(simulation, 'Set'+param_nam)(param_value)
                     
-            #print getattr(microvessel_chaste.simulation, "DomainType." + eachDomainType)
             domain_type = microvessel_chaste.simulation.DomainType
             simulation.SetDomainType(getattr(domain_type, eachDomainType.upper()))
 

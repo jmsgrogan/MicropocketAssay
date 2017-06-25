@@ -17,7 +17,7 @@ class Study():
         self.parameter_collection = parameter_collection
         self.range = []
         self.random_realisations = 3
-        self.simulation_domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere_3D"]
+        self.simulation_domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
         
     def get_task_list(self):
         
@@ -33,8 +33,8 @@ class Study():
                 for eachDomain in self.simulation_domains:
                     for jdx in range(self.random_realisations):
                         local_collection = deepcopy(self.parameter_collection)
-                        local_collection.get_parameter("domain type").value = eachDomain
-                        local_collection.get_parameter("random seed").value = random.randint(0, 1e6)
+                        local_collection.get_parameter("DomainType").value = eachDomain
+                        local_collection.get_parameter("RandomSeed").value = random.randint(0, 1e6)
                         local_collection.get_parameter(eachParameterSet[0]).value = param_value
                         simulation_path = self.work_dir + "/ParamName_" + eachParameterSet[0].replace(" ", "") + "/"
                         simulation_path += "ParamValue_" + str(idx) + "/DomainType_" + eachDomain.replace(" ", "") + "/Run_"+str(jdx)+"/"

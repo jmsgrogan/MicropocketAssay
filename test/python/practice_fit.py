@@ -20,7 +20,7 @@ def plot_3d(work_dir, coords, vals, name="Default"):
     polydata.GetPointData().SetScalars(point_data)
     
     delaunay = vtk.vtkDelaunay2D()
-    delaunay.SetInputData(polydata)
+    delaunay.SetInput(polydata)
 
     writer = vtk.vtkXMLPolyDataWriter()
     writer.SetInputConnection(delaunay.GetOutputPort())
@@ -54,7 +54,7 @@ def evaluate_fit(coords, v, rho_max, t_50, k):
         z_fit.append(z)
     return z_fit
 
-def simple_evaluate_fit(coords, v, rho_max, k, a):
+def simple_evaluate_fit(coords, v, rho_max, k, a, beta):
     
     z_fit = []
     for eachCoord in coords:
@@ -62,20 +62,24 @@ def simple_evaluate_fit(coords, v, rho_max, k, a):
         x = eachCoord[0]/1000.0
         
         x_0 = v*t
-        z = rho_max*t/(a+t)/(1.0 + np.exp(k*(x-x_0)))        
+        x_bar = x-x_0
+        rho = rho_max*t/(a+t)
+        right_front = rho/(1.0 + np.exp(k*x_bar))
+        multiplier = 1.0/(1.0+np.exp(-beta*t*x_bar))                     
+        z = right_front  * multiplier  
         z_fit.append(z)
     return z_fit
 
 if __name__ == "__main__":
     
-    file_handler = chaste.core.OutputFileHandler("Python/Cornea/ParamSweep_WithConsumption/ParamName_sproutingprobability/ParamValue_0", False)
-    #file_handler = chaste.core.OutputFileHandler("Python/Cornea/TestSimulationPdeSink/", False)
+    #file_handler = chaste.core.OutputFileHandler("Python/Cornea/ParamSweep_WithConsumption/ParamName_sproutingprobability/ParamValue_0", False)
+    file_handler = chaste.core.OutputFileHandler("Python/Cornea/TestSimulationFixedGradient/", False)
     work_dir = file_handler.GetOutputDirectoryFullPath()
-    domain_types = ["Planar 2D"]
+    #domain_types = ["Planar_2D"]
     
-    #domain_types = ["Planar 2D", "Circle 2D", "Circle 3D"]
+    domain_types = ["Planar_2D", "Planar_3D",  "Circle_2D", "Circle_3D", "Hemisphere"]
     output_params = ["Line_density", "Tip_density", "Branch_density"]
-    output_params = ["Line_density"]
+    #output_params = ["Line_density"]
     
     for eachDomainType in domain_types:
         for eachOutputParam in output_params:
@@ -88,7 +92,7 @@ if __name__ == "__main__":
             t_eval = []
             z_eval = []
             z_simp = []
-            for idx in range(1, int(len(x))):
+            for idx in range(2, int(len(x))):
                 for jdx in range(0, len(values)):            
                     x_eval.append(x[idx])
                     t = values[jdx][0]
@@ -98,8 +102,6 @@ if __name__ == "__main__":
                     z_simp.append(func(x[idx], t))
                     z = results[idx]
                     z_eval.append(z)
-                    
-            print x_eval, z_eval
             
             Z, X, T = variables('Z, X, T')
             #Z, X = variables('Z, X')
@@ -115,9 +117,12 @@ if __name__ == "__main__":
              
             v = Parameter(value = 0.5, min=0.0, max=20.0)
             k = Parameter(value = 1.0, min=0.1, max=40.0)
-            ap = Parameter(value = 1.0, min=0.1, max=40.0)
+            ap = Parameter(value = 1.0, min=0.1, max=96.0)
             rho_0 = Parameter(value = 1.0, min=0.0, max=100.0)
-            model = {Z: (rho_0 * T/(ap+T))/(1.0+exp(k*(X-v*T)))}
+            beta = Parameter(value = 0.1, min=0.001, max=4000.0)
+            
+            #model = {Z: ((rho_0 * T/(ap+T))/(1.0+exp(k*(X-v*T))))}
+            model = {Z: ((rho_0 * T/(ap+T))/(1.0+exp(k*(X-v*T))))*(1.0/(1.0+exp(-beta*t*(X-v*t))))}
         #     
             x_norm = np.array(x_eval)/1000.0
             z_norm = np.array(z_eval)/0.02
@@ -131,12 +136,7 @@ if __name__ == "__main__":
             v_res = fit_result.value(v)
             rho_fit = fit_result.value(rho_0)
             a_fit = fit_result.value(ap)
-            z_fit = (rho_fit)/(1.0+np.exp(k_res*(x_norm-1.0*v_res+0.2)))
-             
-            fig, ax = plt.subplots()
-            ax.plot(x_norm, z_norm)
-            ax.plot(x_norm, z_fit)
-         
+            beta_fit = fit_result.value(beta)
             v_fit = fit_result.value(v)
             #rho_max_fit = fit_result.value(rho_max)
             #t_50_fit = fit_result.value(t_50)
@@ -144,7 +144,8 @@ if __name__ == "__main__":
              
             #print fit_result.r_squared
             plot_3d("/home/grogan/old_sampled_" + eachDomainType + "_" + eachOutputParam + ".vtp", coords, z_eval, name="Sampled")
-            z_fit = simple_evaluate_fit(coords, v_fit, rho_fit, k_fit, a_fit)
+            #beta_fit = 0.0
+            z_fit = simple_evaluate_fit(coords, v_fit, rho_fit, k_fit, a_fit, beta_fit)
             plot_3d("/home/grogan/old_fit_" + eachDomainType + "_" + eachOutputParam + ".vtp", coords, np.array(z_fit)*0.02, name="Fit")
             #plot_3d("/home/grogan/old_simp_" + eachDomainType + "_" + eachOutputParam + ".vtp", name="Fit")
 
