@@ -11,14 +11,14 @@ if __name__ == '__main__':
     parameter_collection = cornea.parameters.default_parameters.get_default_collection()
     parameter_collection.get_parameter("UseFixedGradient").value = True
     parameter_collection.get_parameter("PelletConcentration").value = 1.e-10*mole_per_metre_cubed()
-    parameter_collection.get_parameter("TotalTime").value = 48.0*3600.0*second()
+    parameter_collection.get_parameter("TotalTime").value = 72.0*3600.0*second()
     #parameter_collection.get_parameter("PersistenceAngle").value = 0.0
     #parameter_collection.get_parameter("ChemotacticStrength").value = 0.0
     parameter_collection.get_parameter("SampleSpacingX").value = 30.0e-6*metre()
-    #parameter_collection.get_parameter("OnlyPerfusedSprout").value = True
+    parameter_collection.get_parameter("OnlyPerfusedSprout").value = True
     
     domain_types = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
-    #domain_types = ["Planar 2D"]
+    domain_types = ["Hemisphere"]
     random_seeds = [1234]
 
     for eachDomainType in domain_types:
