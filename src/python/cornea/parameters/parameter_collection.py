@@ -81,14 +81,23 @@ class Parameter:
         self.max = max_val
         self.value_as_string = ""
         self.store_value_as_string()
-        self.unit_dict = {"m" : "metre",
-                          "s" : "second",
+        self.unit_dict = {"m" : "metres",
+                          "s" : "seconds",
                           "Hz" : "per_second",
                           "kat" : "mole_per_second",
                           "ms^-1" : "metre_per_second",
-                          "m^3" : "metre_cubed",
+                          "m^3" : "metres_cubed",
                           "m^-3mol": "mole_per_metre_cubed",
                           "m^2s^-1" : "metre_squared_per_second"}
+        
+        self.symbol_dict = {microvessel_chaste.utility.QLength: "m",
+                            microvessel_chaste.utility.QTime: "s",
+                            microvessel_chaste.utility.QRate: "Hz",
+                            microvessel_chaste.utility.QMolarFlowRate: "kat",
+                            microvessel_chaste.utility.QVelocity: "ms^-1",
+                            microvessel_chaste.utility.QVolume: "m^3",
+                            microvessel_chaste.utility.QConcentration: "m^-3mol",
+                            microvessel_chaste.utility.QDiffusivity: "m^2s^-1"}
         self.symbol = symbol
         self.nice_name = nice_name
         self.lit_source = lit_source
@@ -104,9 +113,21 @@ class Parameter:
         self.update_value_from_string()
    
     def store_value_as_string(self):
-        
-        self.value_as_string = str(self.value)
-    
+
+        symbol_dict = {microvessel_chaste.utility.QLength: "m",
+                                    microvessel_chaste.utility.QTime: "s",
+                                    microvessel_chaste.utility.QRate: "Hz",
+                                    microvessel_chaste.utility.QMolarFlowRate: "kat",
+                                    microvessel_chaste.utility.QVelocity: "ms^-1",
+                                    microvessel_chaste.utility.QVolume: "m^3",
+                                    microvessel_chaste.utility.QConcentration: "m^-3mol",
+                                    microvessel_chaste.utility.QDiffusivity: "m^2s^-1"}
+
+        if hasattr(self.value, 'GetValue'):
+            self.value_as_string = str(self.value.GetValue()) + " " + symbol_dict[type(self.value)]
+        else:
+            self.value_as_string = str(self.value)
+
     def update_value_from_string(self):
         split_string = self.value_as_string.split()
         if split_string[0] == "False":
@@ -116,10 +137,11 @@ class Parameter:
         elif split_string[0] in ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]:
             self.value = self.value_as_string 
         else:     
+            print split_string[0]
             self.value = float(split_string[0])
         if len(split_string)>1 and not split_string[0] in ["Planar_2D", "Circle_2D",  "Planar_3D", "Circle_3D", "Hemisphere"]:
             unit_name = ''.join(split_string[1:])
-            self.value*=getattr(microvessel_chaste.utility, self.unit_dict[unit_name])() 
+            self.value*=getattr(microvessel_chaste.utility, self.unit_dict[unit_name]) 
             
 if __name__=="__main__":
     
