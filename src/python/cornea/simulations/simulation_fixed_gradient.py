@@ -1,44 +1,98 @@
-import chaste # Core Chaste functionality
-chaste.init() # Initialize MPI and PETSc
-
+import uuid
+import pickle
+import chaste  # Core Chaste functionality
 from microvessel_chaste.utility import *
 import microvessel_chaste.simulation
 import cornea.parameters.default_parameters
+chaste.init()  # Initialize MPI and PETSc
 
 if __name__ == '__main__':
 
-    work_dir = "Python/Cornea/TestSimulationFixedGradient/"
-    parameter_collection = cornea.parameters.default_parameters.get_default_collection()
-    parameter_collection.get_parameter("UseFixedGradient").value = True
-    parameter_collection.get_parameter("PelletConcentration").value = 1.e-10*mole_per_metre_cubed
-    parameter_collection.get_parameter("TotalTime").value = 72.0*3600.0*seconds
-    #parameter_collection.get_parameter("PersistenceAngle").value = 0.0
-    #parameter_collection.get_parameter("ChemotacticStrength").value = 0.0
-    parameter_collection.get_parameter("SampleSpacingX").value = 30.0e-6*metres
-    parameter_collection.get_parameter("OnlyPerfusedSprout").value = True
-    domain_types = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
-    domain_types = ["Hemisphere"]
+    studies = []
+    studies.append({"name": "fixed_gradient",
+                    "switches": {"UseFixedGradient": True,
+                                 "PelletConcentration": 1.e-10*mole_per_metre_cubed,
+                                 "PersistenceAngle": 0.0,
+                                 "OnlyPerfusedSprout": True}})
+#     studies.append({"name": "fixed_gradient_random",
+#                     "switches": {"UseFixedGradient": True,
+#                                  "PelletConcentration": 1.e-10*mole_per_metre_cubed,
+#                                  "PersistenceAngle": 10.0,
+#                                  "OnlyPerfusedSprout": True}})
+#     studies.append({"name": "fixed_gradient_sprout",
+#                     "switches": {"UseFixedGradient": True,
+#                                  "PelletConcentration": 1.e-10*mole_per_metre_cubed,
+#                                  "PersistenceAngle": 0.0}})
+#     studies.append({"name": "fixed_gradient_sprout_random",
+#                     "switches": {"UseFixedGradient": True,
+#                                  "PelletConcentration": 1.e-10*mole_per_metre_cubed,
+#                                  "PersistenceAngle": 10.0}})
+#     studies.append({"name": "fixed_gradient_sprout_random_no_chemo",
+#                     "switches": {"UseFixedGradient": True,
+#                                  "PelletConcentration": 1.e-10*mole_per_metre_cubed,
+#                                  "PersistenceAngle": 10.0,
+#                                  "ChemotacticStrength": 0.0}})
+#     studies.append({"name": "fixed_gradient_sprout_random_high_conc",
+#                     "switches": {"UseFixedGradient": True,
+#                                  "PelletConcentration": 2.e-10*mole_per_metre_cubed,
+#                                  "PersistenceAngle": 10.0}})
+    restart = {'run_id': "d3d211d0-0887-43f6-b380-78fb09700f13",
+               'study_id': 1}
+    restart = None
+
+    if restart is None:
+        run_id = uuid.uuid4()
+    else:
+        run_id = restart["run_id"]
+        studies = studies[restart["study_id"]:]
+
+    work_dir = "Python/Cornea/Study_fixed_gradient_" + str(run_id) + "/"
+    #random_seeds = [1234, 5678, 9101112]
     random_seeds = [1234]
+    domain_types = ["Planar_2D", "Circle_2D", "Planar_3D",
+                    "Circle_3D", "Hemisphere"]
 
-    for eachDomainType in domain_types:
+    study_names = [x["name"] for x in studies]
+    study_data = {"random_seeds": random_seeds,
+                  "domain_types": domain_types,
+                  "study_names": study_names}
+    file_handler = chaste.core.OutputFileHandler(work_dir, False)
+    if restart is None:
+        pickle.dump(study_data, open(file_handler.GetOutputDirectoryFullPath() +
+                                     "/study_data.p", "wb"))
+
+    for eachStudy in studies:
+        pc = cornea.parameters.default_parameters.get_default_collection()
+        pc.get_parameter("TotalTime").value = 50.0*3600.0*seconds
+        pc.get_parameter("SampleSpacingX").value = 30.0e-6*metres
+        int_work_dir = work_dir + "/" + eachStudy["name"]
+        switches = eachStudy["switches"]
+        for key, value in switches.iteritems():
+            pc.get_parameter(key).value = value
         run_number = 0
-        parameter_collection.get_parameter("DomainType").value = eachDomainType
         for eachSeed in random_seeds:
-            parameter_collection.get_parameter("RunNumber").value = run_number
-            parameter_collection.get_parameter("RandomSeed").value = eachSeed
-            local_work_dir = work_dir + "/DomainType_" + eachDomainType.replace(" ", "") + "/Run_" + str(run_number)
-            if "2" in eachDomainType:
-                simulation = microvessel_chaste.simulation.CornealMicropocketSimulation2()
-            else: 
-                simulation = microvessel_chaste.simulation.CornealMicropocketSimulation3()
-            simulation.SetWorkDir(local_work_dir)
-            for eachParameter in parameter_collection.collection.keys():
-                if eachParameter not in ["DomainType"]:
-                    param_nam = parameter_collection.collection[eachParameter].name
-                    param_value = parameter_collection.collection[eachParameter].value
-                    getattr(simulation, 'Set'+param_nam)(param_value)
-            domain_type = microvessel_chaste.simulation.DomainType
-            simulation.SetDomainType(getattr(domain_type, eachDomainType.upper()))
-
-            simulation.Run()
+            for eachDomainType in domain_types:
+                pc.get_parameter("DomainType").value = eachDomainType
+                pc.get_parameter("RunNumber").value = run_number
+                pc.get_parameter("RandomSeed").value = eachSeed
+                domain_string = "/DomainType_" + eachDomainType.replace(" ", "")
+                run_string = "/Run_" + str(run_number) + "/"
+                local_ext = domain_string + run_string
+                local_work_dir = int_work_dir + local_ext
+                if "2" in eachDomainType:
+                    simulation = microvessel_chaste.simulation.CornealMicropocketSimulation2()
+                else: 
+                    simulation = microvessel_chaste.simulation.CornealMicropocketSimulation3()
+                simulation.SetWorkDir(local_work_dir)
+                for eachParameter in pc.collection.keys():
+                    if eachParameter not in ["DomainType"]:
+                        param_nam = pc.collection[eachParameter].name
+                        param_value = pc.collection[eachParameter].value
+                        getattr(simulation, 'Set'+param_nam)(param_value)
+                domain_type = microvessel_chaste.simulation.DomainType
+                simulation.SetDomainType(getattr(domain_type, 
+                                                 eachDomainType.upper()))
+                simulation.Run()
+                pc.save(file_handler.GetOutputDirectoryFullPath() + eachStudy["name"] + "/" +
+                        local_ext + "/input_parameters.p")
             run_number += 1

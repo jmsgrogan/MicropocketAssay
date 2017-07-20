@@ -53,6 +53,9 @@ class SimulationParameterCollection:
         self.collection[parameter.name] = parameter
         
     def save(self, file_name):
+        if not os.path.exists(os.path.dirname(file_name)):
+            os.makedirs(os.path.dirname(file_name))
+        
         with open(file_name, 'wb') as fp:
             pickle.dump([self.collection, self.random_seed], fp)  
             
@@ -137,7 +140,6 @@ class Parameter:
         elif split_string[0] in ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]:
             self.value = self.value_as_string 
         else:     
-            print split_string[0]
             self.value = float(split_string[0])
         if len(split_string)>1 and not split_string[0] in ["Planar_2D", "Circle_2D",  "Planar_3D", "Circle_3D", "Hemisphere"]:
             unit_name = ''.join(split_string[1:])
