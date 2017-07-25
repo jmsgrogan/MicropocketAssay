@@ -11,7 +11,7 @@ if __name__ == '__main__':
     studies = []
     studies.append({"name": "fixed_gradient",
                     "switches": {"UseFixedGradient": True,
-                                 "PelletConcentration": 1.e-10*mole_per_metre_cubed,
+                                 "PelletConcentration": 1.e-7*mole_per_metre_cubed,
                                  "PersistenceAngle": 0.0,
                                  "OnlyPerfusedSprout": True}})
 #     studies.append({"name": "fixed_gradient_random",
@@ -36,9 +36,9 @@ if __name__ == '__main__':
 #                     "switches": {"UseFixedGradient": True,
 #                                  "PelletConcentration": 2.e-10*mole_per_metre_cubed,
 #                                  "PersistenceAngle": 10.0}})
-    restart = {'run_id': "d3d211d0-0887-43f6-b380-78fb09700f13",
-               'study_id': 1}
-    restart = None
+    restart = {'run_id': "c3e35591-035d-4eae-a83b-e40a9422af3f",
+               'study_id': 0}
+    #restart = None
 
     if restart is None:
         run_id = uuid.uuid4()
@@ -47,8 +47,8 @@ if __name__ == '__main__':
         studies = studies[restart["study_id"]:]
 
     work_dir = "Python/Cornea/Study_fixed_gradient_" + str(run_id) + "/"
-    #random_seeds = [1234, 5678, 9101112]
-    random_seeds = [1234]
+    random_seeds = [1234, 5678, 9101112, 5745745, 235235645]
+    random_seeds = [1234, 5678, 9101112, 5745745]
     domain_types = ["Planar_2D", "Circle_2D", "Planar_3D",
                     "Circle_3D", "Hemisphere"]
 
