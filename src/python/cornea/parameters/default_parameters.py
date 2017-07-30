@@ -74,9 +74,11 @@ _default_collection.add_parameter(Parameter("PersistenceAngle", 5.0,
 _default_collection.add_parameter(Parameter("TipVelocity", 20.0 *(1.e-6/3600.0) * metre_per_second, 
                                            min_val = 0.1, max_val = 4.0, symbol = "v", 
                                            nice_name = "Persistence Angle")) 
-_default_collection.add_parameter(Parameter("TipExclusionRadius", 40.0e-6*metres, 
-                                           min_val = 0.0, max_val = 2.0, symbol = "r_{excl}", 
-                                           nice_name = "Tip Exclusion Radius")) 
+_default_collection.add_parameter(Parameter("AnastamosisRadius", 5.0e-6*metres, 
+                                           nice_name = "Anastamosis Radius")) 
+_default_collection.add_parameter(Parameter("CellLength", 20.0e-6*metres, 
+                                           nice_name = "Cell Length")) 
+_default_collection.add_parameter(Parameter("UseTipExclusion", True) )
 
 # Angiogenesis switches
 _default_collection.add_parameter(Parameter("DoAnastamosis", True)) 

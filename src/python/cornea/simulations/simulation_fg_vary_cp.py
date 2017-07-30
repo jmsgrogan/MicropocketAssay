@@ -15,30 +15,30 @@ if __name__ == '__main__':
                                  "PersistenceAngle": 0.0,
                                  "ChemotacticStrength": 1.0,
                                  "OnlyPerfusedSprout": True}})
-    studies.append({"name": "fixed_gradient_5",
-                    "switches": {"UseFixedGradient": True,
-                                 "PelletConcentration": 1.0e-10*mole_per_metre_cubed,
-                                 "PersistenceAngle": 0.0,
-                                 "ChemotacticStrength": 1.0,
-                                 "OnlyPerfusedSprout": True}})
-    studies.append({"name": "fixed_gradient_10",
-                    "switches": {"UseFixedGradient": True,
-                                 "PelletConcentration": 1.5e-10*mole_per_metre_cubed,
-                                 "PersistenceAngle": 0.0,
-                                 "ChemotacticStrength": 1.0,
-                                 "OnlyPerfusedSprout": True}})
-    studies.append({"name": "fixed_gradient_15",
-                    "switches": {"UseFixedGradient": True,
-                                 "PelletConcentration": 2.0e-10*mole_per_metre_cubed,
-                                 "PersistenceAngle": 0.0,
-                                 "ChemotacticStrength": 1.0,
-                                 "OnlyPerfusedSprout": True}})
-    studies.append({"name": "fixed_gradient_20",
-                    "switches": {"UseFixedGradient": True,
-                                 "PelletConcentration": 2.5e-10*mole_per_metre_cubed,
-                                 "PersistenceAngle": 0.0,
-                                 "ChemotacticStrength": 1.0,
-                                 "OnlyPerfusedSprout": True}})
+#     studies.append({"name": "fixed_gradient_5",
+#                     "switches": {"UseFixedGradient": True,
+#                                  "PelletConcentration": 1.0e-10*mole_per_metre_cubed,
+#                                  "PersistenceAngle": 0.0,
+#                                  "ChemotacticStrength": 1.0,
+#                                  "OnlyPerfusedSprout": True}})
+#     studies.append({"name": "fixed_gradient_10",
+#                     "switches": {"UseFixedGradient": True,
+#                                  "PelletConcentration": 1.5e-10*mole_per_metre_cubed,
+#                                  "PersistenceAngle": 0.0,
+#                                  "ChemotacticStrength": 1.0,
+#                                  "OnlyPerfusedSprout": True}})
+#     studies.append({"name": "fixed_gradient_15",
+#                     "switches": {"UseFixedGradient": True,
+#                                  "PelletConcentration": 2.0e-10*mole_per_metre_cubed,
+#                                  "PersistenceAngle": 0.0,
+#                                  "ChemotacticStrength": 1.0,
+#                                  "OnlyPerfusedSprout": True}})
+#     studies.append({"name": "fixed_gradient_20",
+#                     "switches": {"UseFixedGradient": True,
+#                                  "PelletConcentration": 2.5e-10*mole_per_metre_cubed,
+#                                  "PersistenceAngle": 0.0,
+#                                  "ChemotacticStrength": 1.0,
+#                                  "OnlyPerfusedSprout": True}})
     restart = {'run_id': "c3e35591-035d-4eae-a83b-e40a9422af3f",
                'study_id': 0}
     restart = None
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     work_dir = "Python/Cornea/Study_fg_vary_cp" + str(run_id) + "/"
     random_seeds = [1234, 5678, 9101112, 5745745, 235235645]
-    random_seeds = [1234, 5678, 9101112]
+    random_seeds = [1234]
     domain_types = ["Planar_2D", "Circle_2D", "Planar_3D",
                     "Circle_3D", "Hemisphere"]
 
