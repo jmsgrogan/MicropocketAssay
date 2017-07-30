@@ -272,17 +272,17 @@ def do_front_position_overview(rc):
     ax.set_xlabel("Time (hr)")
     c_p = [0.1, 0.5, 1.0, 1.5, 2.0]
 
-    for idx, eachStudy in enumerate(rc.study_data["study_names"]):
-        time_series = rc.results[eachStudy]["Planar_2D"]["Line_density"]["output"][0]
-        pc = rc.results[eachStudy]["Planar_2D"]["Line_density"]["params"][0]
-        times = []
-        local_results = []
-        analytical = []
-        for eachTime in time_series:
-            times.append(eachTime["time"])
-            local_results.append(eachTime["location_mid"])
-        smooth_result = smooth_results(local_results)
-        ax.plot(np.array(times), smooth_result, lw=1, label=eachStudy, color="red")
+#     for idx, eachStudy in enumerate(rc.study_data["study_names"]):
+#         time_series = rc.results[eachStudy]["Planar_2D"]["Line_density"]["output"][0]
+#         pc = rc.results[eachStudy]["Planar_2D"]["Line_density"]["params"][0]
+#         times = []
+#         local_results = []
+#         analytical = []
+#         for eachTime in time_series:
+#             times.append(eachTime["time"])
+#             local_results.append(eachTime["location_min"])
+#         smooth_result = smooth_results(local_results)
+#         ax.plot(np.array(times), smooth_result, lw=1, label=eachStudy)
 
     for idx, eachStudy in enumerate(rc.study_data["study_names"]):
         time_series = rc.results[eachStudy]["Planar_2D"]["Tip_density"]["output"][0]
@@ -292,9 +292,9 @@ def do_front_position_overview(rc):
         analytical = []
         for eachTime in time_series:
             times.append(eachTime["time"])
-            local_results.append(eachTime["location_mid"])
+            local_results.append(eachTime["location_min"])
         smooth_result = smooth_results(local_results)
-        ax.plot(np.array(times), smooth_result, lw=1, label=eachStudy, color="blue")        
+        ax.plot(np.array(times), smooth_result, lw=1, label=eachStudy)        
         
     work_dir = rc.get_path()
     fig.savefig(work_dir+"/study_level_front_position.png",
