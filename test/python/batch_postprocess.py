@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -54,10 +55,19 @@ def do_density_line_plots(rc, x_title=r"Position - $\mu m$"):
                             ax.set_xlim(eachParam.limits[0])
                         if eachParam.limits[1] is not None:
                             ax.set_ylim(eachParam.limits[1])
+                    height = pc.get_parameter("PelletHeight").value
+                    height = height.Convert(1.e-6*metres)
+                    offset = pc.get_parameter("LimbalOffset").value
+                    offset = offset.Convert(1.e-6*metres)
+                    xline = height + offset
+                    if "Hemisphere" in eachDomain:
+                        radius = pc.get_parameter("CorneaRadius").value
+                        radius = radius.Convert(1.e-6*metres)
+                        xline = radius*np.asin(xline/radius)
                     ax.axvline(left_line_props['xloc'], 
                                color=left_line_props['color'],
                                linestyle='--', lw=1)
-                    ax.axvline(right_line_props['xloc'], 
+                    ax.axvline(xline, 
                                color=right_line_props['color'],
                                linestyle='--', lw=1)
                     ax.set_xlabel(x_title)
@@ -73,7 +83,7 @@ def do_density_line_plots(rc, x_title=r"Position - $\mu m$"):
                             ana_results = get_analytical_solution(locations, 
                                                                   eachTime["time"],
                                                                   pc)
-                            ax.plot(locations, ana_results, color='black', lw=1)
+                            #ax.plot(locations, ana_results, color='black', lw=1)
                         ax.plot(locations, smooth_result, color=colors[jdx], lw=1)
                         local_max = np.max(smooth_result)
                         if local_max > max_result:
@@ -94,10 +104,10 @@ def do_density_domain_comparisons(rc):
 
     dpi = 90
     ymax = 1100
-    outer_plot_list = []
+
     for eachStudy in rc.study_data["study_names"]:
         print "Density Domain Plots for: " + eachStudy
-
+        outer_plot_list = []
         work_dir = rc.get_path(eachStudy)
         for eachParam in rc.parameters:
             plot_list = []
@@ -145,6 +155,7 @@ def do_density_position_summary(rc):
     alpha = 0.3
 
     for eachStudy in rc.study_data["study_names"]:
+        print "Density Position Summary for: ", eachStudy
         for eachName in names:
             fig, ax = plt.subplots()
             ax.set_ylabel(eachName + " Velocity (um/hr)")
@@ -154,7 +165,7 @@ def do_density_position_summary(rc):
             for idx in range(len(vals)):
                 av_vels = []
                 std_vels = []
-                var_label = "location_"+vals[idx]
+                var_label = "location_" + vals[idx]
                 param_label = eachName + "_density"
                 for eachDomain in domain_types:
                     summaries = rc.results[eachStudy][eachDomain][param_label]["summaries"]
@@ -195,7 +206,6 @@ def do_density_position_summary(rc):
             fig, ax = plt.subplots()
             ax.set_ylabel(eachName + " Density Rate of Increase (um^-2hr^-1)")
             ind = np.arange(len(domain_types))
-            width = 0.7
             ax.set_xticks(ind)
             ax.set_xticklabels([x for x in domain_types])
             av_vels = []
@@ -217,7 +227,6 @@ def do_density_position_summary(rc):
             fig, ax = plt.subplots()
             ax.set_ylabel(eachName + " Density(um^-2)")
             ind = np.arange(len(domain_types))
-            width = 0.7
             ax.set_xticks(ind)
             ax.set_xticklabels([x for x in domain_types])
             av_vels = []
@@ -294,8 +303,7 @@ def do_front_position_overview(rc):
             times.append(eachTime["time"])
             local_results.append(eachTime["location_min"])
         smooth_result = smooth_results(local_results)
-        ax.plot(np.array(times), smooth_result, lw=1, label=eachStudy)        
-        
+        ax.plot(np.array(times), smooth_result, lw=1, label=eachStudy)
     work_dir = rc.get_path()
     fig.savefig(work_dir+"/study_level_front_position.png",
                 bbox_inches='tight', dpi=dpi)
@@ -303,13 +311,19 @@ def do_front_position_overview(rc):
 
 if __name__ == '__main__':
 
-    work_dir = "Python/Cornea/Study_fg_vary_cpa238f435-d103-4cb3-b583-d38a94720733"
+    work_dir = "Python/Cornea/Study_pde_vary_hdf042a12-9570-4c45-bb8e-47a031316478"
+    work_dir = None
+
+    if work_dir is None:
+        work_dir = get_most_recently_modified_dir("Python/Cornea/")
+    print "Working from: ", work_dir
+
     rc = ResultsCollection(work_dir)
     rc.load_results()
 
-    #do_density_line_plots(rc)
-    #do_density_domain_comparisons(rc)
-    #do_density_position_summary(rc)
+    do_density_line_plots(rc)
+    do_density_domain_comparisons(rc)
+    do_density_position_summary(rc)
 
     #do_line_density_overview(rc)
     do_front_position_overview(rc)

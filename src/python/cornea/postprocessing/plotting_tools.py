@@ -1,3 +1,5 @@
+import os
+import glob
 import pickle
 import copy
 import numpy as np
@@ -16,6 +18,14 @@ def smooth_results(results):
     smooth_result[0] = results[0]
     smooth_result[-1] = results[-1]
     return smooth_result
+
+
+def get_most_recently_modified_dir(search_dir):
+
+    file_handler = chaste.core.OutputFileHandler(search_dir, False)
+    work_dir = file_handler.GetOutputDirectoryFullPath()
+    recent_dir = max(glob.glob(os.path.join(work_dir, '*/')), key=os.path.getmtime)
+    return os.path.relpath(recent_dir, file_handler.GetChasteTestOutputDirectory())
 
 
 class OutputParameter():
@@ -56,7 +66,7 @@ class ResultsCollection(object):
                            OutputParameter(name="Tip_density"),
                            OutputParameter(name="Branch_density"),
                            OutputParameter(name="PDE"), ]
-        self.result_left_offset = 2
+        self.result_left_offset = 0
         self.load_study_data()
 
     def load_study_data(self):
@@ -126,13 +136,15 @@ class ResultsCollection(object):
                             max_arg = np.argmax(offset_result)
                             local_results["location_max"] = offset_locations[max_arg]
                             mid_val = offset_result[max_arg]/2.0
-                            local_results["location_mid"] = self.get_nearest_index(mid_val,
-                                                                                   offset_result,
-                                                                                   offset_locations)
+                            mid_index = (np.abs(offset_result-mid_val)).argmin()
+                            if mid_index < max_arg:
+                                mid_index = max_arg
+                            local_results["location_mid"] = offset_locations[mid_index]
                             min_val = 0.01*offset_result[max_arg]
-                            local_results["location_min"] = self.get_nearest_index(min_val,
-                                                                                   offset_result,
-                                                                                   offset_locations)
+                            min_index = (np.abs(offset_result-min_val)).argmin()
+                            if min_index < mid_index:
+                                min_index = mid_index
+                            local_results["location_min"] = offset_locations[min_index]
                             local_time_series.append(local_results)
                         self.results[eachStudy][eachDomain][eachParam.name]["output"].append(local_time_series)
 
@@ -142,12 +154,12 @@ class ResultsCollection(object):
                 param = eachParam.name
                 output_vars = self.location_plot_keys.keys()
                 for eachVar in output_vars:
-                    for eachDomainType in self.study_data["domain_types"]:
+                    for eachDomain in self.study_data["domain_types"]:
                         self.results[eachStudy][eachDomain][param]["summaries"][eachVar] = {"midpoints": [],
                                                                                             "slopes": []}
                         num_random = len(self.study_data["random_seeds"])
                         for idx in range(num_random):
-                            time_series = self.results[eachStudy][eachDomainType][param]["output"][idx]
+                            time_series = self.results[eachStudy][eachDomain][param]["output"][idx]
                             times = []
                             local_results = []
                             for eachTime in time_series:
@@ -166,7 +178,7 @@ class ResultsCollection(object):
                             upper_time = float(upper_index)*dt
                             slope = (upper_val-lower_val)/(upper_time-lower_time)
                             self.results[eachStudy][eachDomain][param]["summaries"][eachVar]["slopes"].append(slope)
-                            self.results[eachStudy][eachDomain][param]["summaries"][eachVar]["midpoints"].append(md_val)
+                            self.results[eachStudy][eachDomain][param]["summaries"][eachVar]["midpoints"].append(md_val)   
 
 
 def merge_images_x(output_path, input_paths):

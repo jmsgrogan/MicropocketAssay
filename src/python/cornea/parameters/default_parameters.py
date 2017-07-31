@@ -62,27 +62,29 @@ _default_collection.add_parameter(Parameter("FinitePelletWidth", False))
 _default_collection.add_parameter(Parameter("SproutingProbability", (0.5 /3600.0)*per_second, 
                                            min_val = 0.0, max_val = 10.0, symbol = "P_{max}", 
                                            nice_name = "Max Sprouting Probability")) 
-_default_collection.add_parameter(Parameter("AttractionStrength", 0.0, 
+_default_collection.add_parameter(Parameter("AttractionStrength", 0.0,
                                            min_val = 0.0, max_val = 10.0, symbol = "S_{att}", 
                                            nice_name = "Attraction Strength")) 
-_default_collection.add_parameter(Parameter("ChemotacticStrength", 0.5, 
+_default_collection.add_parameter(Parameter("ChemotacticStrength", 0.5,
                                            min_val = 0.0, max_val = 20.0, symbol = "\chi", 
                                            nice_name = "Chemotactic Strength")) 
-_default_collection.add_parameter(Parameter("PersistenceAngle", 5.0, 
-                                           min_val = 0.0, max_val = 4.0, symbol = "\alpha", 
-                                           nice_name = "Persistence Angle")) 
+_default_collection.add_parameter(Parameter("PersistenceAngle", 5.0,
+                                            min_val=0.0,
+                                            max_val=4.0,
+                                            symbol="\alpha",
+                                            nice_name="Persistence Angle"))
 _default_collection.add_parameter(Parameter("TipVelocity", 20.0 *(1.e-6/3600.0) * metre_per_second, 
                                            min_val = 0.1, max_val = 4.0, symbol = "v", 
-                                           nice_name = "Persistence Angle")) 
-_default_collection.add_parameter(Parameter("AnastamosisRadius", 5.0e-6*metres, 
+                                           nice_name = "Persistence Angle"))
+_default_collection.add_parameter(Parameter("AnastamosisRadius", 5.0e-6*metres,
                                            nice_name = "Anastamosis Radius")) 
-_default_collection.add_parameter(Parameter("CellLength", 20.0e-6*metres, 
-                                           nice_name = "Cell Length")) 
-_default_collection.add_parameter(Parameter("UseTipExclusion", True) )
+_default_collection.add_parameter(Parameter("CellLength", 20.0e-6*metres,
+                                           nice_name = "Cell Length"))
+_default_collection.add_parameter(Parameter("UseTipExclusion", True))
 
 # Angiogenesis switches
-_default_collection.add_parameter(Parameter("DoAnastamosis", True)) 
-_default_collection.add_parameter(Parameter("OnlyPerfusedSprout", False)) 
+_default_collection.add_parameter(Parameter("DoAnastamosis", True))
+_default_collection.add_parameter(Parameter("OnlyPerfusedSprout", False))
 
 # PDE Details
 _default_collection.add_parameter(Parameter("PelletConcentration", 0.3*mole_per_metre_cubed, 
@@ -108,7 +110,7 @@ _default_collection.add_parameter(Parameter("UptakeRatePerCell", (4.e-18/3600.0)
                                            nice_name = "Uptake Rate Per Cell")) 
 
 # PDE Numerics
-_default_collection.add_parameter(Parameter("PdeTimeIncrement", 0.01)) 
+_default_collection.add_parameter(Parameter("PdeTimeIncrement", 0.05)) 
 
 # PDE Switches
 _default_collection.add_parameter(Parameter("IncludeVesselSink", True))
@@ -118,8 +120,8 @@ _default_collection.add_parameter(Parameter("UsePdeOnly", False))
 # Simulation Details
 _default_collection.add_parameter(Parameter("TotalTime", 24.0*3600.0*seconds)) 
 _default_collection.add_parameter(Parameter("TimeStepSize", 0.5*3600.0*seconds))
-_default_collection.add_parameter(Parameter("RunNumber", 0)) 
-_default_collection.add_parameter(Parameter("RandomSeed", 0)) 
+_default_collection.add_parameter(Parameter("RunNumber", 0))
+_default_collection.add_parameter(Parameter("RandomSeed", 0))
 
 def get_default_collection():
     return deepcopy(_default_collection)

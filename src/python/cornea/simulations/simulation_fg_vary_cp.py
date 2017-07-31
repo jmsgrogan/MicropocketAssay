@@ -9,18 +9,16 @@ chaste.init()  # Initialize MPI and PETSc
 if __name__ == '__main__':
 
     studies = []
-    studies.append({"name": "fixed_gradient_1",
-                    "switches": {"UseFixedGradient": True,
-                                 "PelletConcentration": 0.5e-10*mole_per_metre_cubed,
-                                 "PersistenceAngle": 0.0,
-                                 "ChemotacticStrength": 1.0,
-                                 "OnlyPerfusedSprout": True}})
-#     studies.append({"name": "fixed_gradient_5",
-#                     "switches": {"UseFixedGradient": True,
-#                                  "PelletConcentration": 1.0e-10*mole_per_metre_cubed,
-#                                  "PersistenceAngle": 0.0,
-#                                  "ChemotacticStrength": 1.0,
-#                                  "OnlyPerfusedSprout": True}})
+    studies.append({"name": "fixed_gradient_10",
+                    "switches": {"UseFixedGradient": False,
+                                 "PelletConcentration": 100.0*mole_per_metre_cubed,
+                                 "PelletHeight": 0.7e-3*metres,
+                                 "ChemotacticStrength": 1.0}})
+#     studies.append({"name": "fixed_gradient_07",
+#                     "switches": {"UseFixedGradient": False,
+#                                  "PelletConcentration": 100.0*mole_per_metre_cubed,
+#                                  "PelletHeight": 0.7e-3*metres,
+#                                  "ChemotacticStrength": 1.0}})
 #     studies.append({"name": "fixed_gradient_10",
 #                     "switches": {"UseFixedGradient": True,
 #                                  "PelletConcentration": 1.5e-10*mole_per_metre_cubed,
@@ -49,11 +47,12 @@ if __name__ == '__main__':
         run_id = restart["run_id"]
         studies = studies[restart["study_id"]:]
 
-    work_dir = "Python/Cornea/Study_fg_vary_cp" + str(run_id) + "/"
+    work_dir = "Python/Cornea/Study_pde_vary_h" + str(run_id) + "/"
     random_seeds = [1234, 5678, 9101112, 5745745, 235235645]
     random_seeds = [1234]
     domain_types = ["Planar_2D", "Circle_2D", "Planar_3D",
                     "Circle_3D", "Hemisphere"]
+    domain_types = ["Planar_3D", "Planar_3D_Finite"]
 
     study_names = [x["name"] for x in studies]
     study_data = {"random_seeds": random_seeds,
@@ -66,8 +65,6 @@ if __name__ == '__main__':
 
     for eachStudy in studies:
         pc = cornea.parameters.default_parameters.get_default_collection()
-        pc.get_parameter("TotalTime").value = 50.0*3600.0*seconds
-        pc.get_parameter("SampleSpacingX").value = 30.0e-6*metres
         int_work_dir = work_dir + "/" + eachStudy["name"]
         switches = eachStudy["switches"]
         for key, value in switches.iteritems():
@@ -75,9 +72,17 @@ if __name__ == '__main__':
         run_number = 0
         for eachSeed in random_seeds:
             for eachDomainType in domain_types:
+                h = pc.get_parameter("PelletHeight").value.Convert(1.0*metres)
+                v = pc.get_parameter("TipVelocity").value.Convert(1.0*metre_per_second)
+                t = h/v
+                pc.get_parameter("TotalTime").value = 3600.0*round(0.9*t/3600.0)*seconds
+                print pc.get_parameter("TotalTime").value.Convert(seconds)
+                pc.get_parameter("SampleSpacingX").value = 30.0e-6*metres
                 pc.get_parameter("DomainType").value = eachDomainType
                 pc.get_parameter("RunNumber").value = run_number
                 pc.get_parameter("RandomSeed").value = eachSeed
+                if "Finite" in eachDomainType:
+                    pc.get_parameter("FinitePelletWidth").value = True
                 domain_string = "/DomainType_" + eachDomainType.replace(" ", "")
                 run_string = "/Run_" + str(run_number) + "/"
                 local_ext = domain_string + run_string
@@ -93,8 +98,10 @@ if __name__ == '__main__':
                         param_value = pc.collection[eachParameter].value
                         getattr(simulation, 'Set'+param_nam)(param_value)
                 domain_type = microvessel_chaste.simulation.DomainType
-                simulation.SetDomainType(getattr(domain_type, 
-                                                 eachDomainType.upper()))
+                domain_key = eachDomainType
+                if "Finite" in eachDomainType:
+                    domain_key = eachDomainType[0:-7]
+                simulation.SetDomainType(getattr(domain_type, domain_key.upper()))
                 simulation.Run()
                 pc.save(file_handler.GetOutputDirectoryFullPath() + eachStudy["name"] + "/" +
                         local_ext + "/input_parameters.p")
