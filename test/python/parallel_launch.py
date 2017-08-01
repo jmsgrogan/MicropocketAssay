@@ -11,22 +11,19 @@ import time
 import sys
 import pickle
 import chaste
-import types
 import microvessel_chaste.simulation
 from microvessel_chaste.utility import *
-from cornea.simulations.pde_vary_h import study
-from cornea.simulations.pde_vary_h import master_work_dir
-from cornea.simulations.pde_vary_h import study_data
+#from cornea.simulations.pde_vary_h import study, master_work_dir, study_data
+from cornea.simulations.fg_vary_cp_sprout import study, master_work_dir, study_data
+
+from mpi4py import MPI
 
 n_workers = 3
-n_tasks = 50
 start_worker = 'worker'
 usage = 'Program should be started without argument'
 
 # Parent
 if len(sys.argv) == 1:
-
-    from mpi4py import MPI
 
     # Start clock
     start = MPI.Wtime()
@@ -71,8 +68,6 @@ if len(sys.argv) == 1:
 
 # Worker
 elif sys.argv[1] == start_worker:
-
-    from mpi4py import MPI
 
     # Connect to parent
     try:

@@ -45,6 +45,8 @@ def do_density_line_plots(rc, x_title=r"Position - $\mu m$"):
                 figure_paths = []
                 for eachParam in rc.parameters:
                     param = eachParam.name
+                    if len(rc.results[eachStudy][eachDomain][param]["output"])<=idx:
+                        continue
                     fig_path = local_work_dir + "/" + param + ".png"
                     figure_paths.append(fig_path)
                     time_series = rc.results[eachStudy][eachDomain][param]["output"][idx]
@@ -63,7 +65,7 @@ def do_density_line_plots(rc, x_title=r"Position - $\mu m$"):
                     if "Hemisphere" in eachDomain:
                         radius = pc.get_parameter("CorneaRadius").value
                         radius = radius.Convert(1.e-6*metres)
-                        xline = radius*np.asin(xline/radius)
+                        xline = radius*np.arcsin(xline/radius)
                     ax.axvline(left_line_props['xloc'], 
                                color=left_line_props['color'],
                                linestyle='--', lw=1)
@@ -123,6 +125,8 @@ def do_density_domain_comparisons(rc):
                     num_random = len(rc.study_data["random_seeds"])
                     res = rc.results[eachStudy][eachDomain][param]["output"]
                     for idx in range(num_random):
+                        if len(res)<=idx:
+                            continue
                         time_series = res[idx]
                         times = []
                         local_results = []
@@ -254,6 +258,8 @@ def do_line_density_overview(rc):
     c_p = [0.1, 0.5, 1.0, 1.5, 2.0]
 
     for idx, eachStudy in enumerate(rc.study_data["study_names"]):
+        if len(rc.results[eachStudy]["Planar_2D"]["Line_density"]["output"]) ==0:
+            continue
         time_series = rc.results[eachStudy]["Planar_2D"]["Line_density"]["output"][0]
         pc = rc.results[eachStudy]["Planar_2D"]["Line_density"]["params"][0]
         times = []
@@ -294,6 +300,8 @@ def do_front_position_overview(rc):
 #         ax.plot(np.array(times), smooth_result, lw=1, label=eachStudy)
 
     for idx, eachStudy in enumerate(rc.study_data["study_names"]):
+        if len(rc.results[eachStudy]["Planar_2D"]["Tip_density"]["output"]) ==0:
+            continue
         time_series = rc.results[eachStudy]["Planar_2D"]["Tip_density"]["output"][0]
         pc = rc.results[eachStudy]["Planar_2D"]["Tip_density"]["params"][0]
         times = []
@@ -311,8 +319,10 @@ def do_front_position_overview(rc):
 
 if __name__ == '__main__':
 
-    work_dir = "Python/Cornea/Study_pde_vary_hdf042a12-9570-4c45-bb8e-47a031316478"
-    work_dir = None
+    work_dir = "Python/Cornea/Study_fg_vary_cpe4a6fe97-bd46-48a3-bc10-59a5ce1eda83"
+    work_dir = "Python/Cornea/Study_fg_vary_cp_randomd730ffa6-e920-4642-ad72-3d16baf302c7"
+    work_dir = "Python/Cornea/Study_pde_vary_h04ac8e66-da53-41ba-b161-2d70fc876a35"
+    #work_dir = None
 
     if work_dir is None:
         work_dir = get_most_recently_modified_dir("Python/Cornea/")
@@ -321,9 +331,9 @@ if __name__ == '__main__':
     rc = ResultsCollection(work_dir)
     rc.load_results()
 
-    do_density_line_plots(rc)
-    do_density_domain_comparisons(rc)
-    do_density_position_summary(rc)
+    #do_density_line_plots(rc)
+    #do_density_domain_comparisons(rc)
+    #do_density_position_summary(rc)
 
-    #do_line_density_overview(rc)
+    do_line_density_overview(rc)
     do_front_position_overview(rc)
