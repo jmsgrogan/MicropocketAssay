@@ -113,6 +113,8 @@ class ResultsCollection(object):
                 for idx in range(num_random):
                     pc_dir = self.get_path(eachStudy, eachDomain, str(idx))
                     pc = SimulationParameterCollection()
+                    if not os.path.isfile(pc_dir + "input_parameters.p"):
+                        continue
                     pc.load(pc_dir + "input_parameters.p")
                     for eachParam in self.parameters:
                         self.results[eachStudy][eachDomain][eachParam.name]["params"].append(pc)
@@ -157,7 +159,7 @@ class ResultsCollection(object):
                     for eachDomain in self.study_data["domain_types"]:
                         self.results[eachStudy][eachDomain][param]["summaries"][eachVar] = {"midpoints": [],
                                                                                             "slopes": []}
-                        num_random = len(self.study_data["random_seeds"])
+                        num_random = len(self.results[eachStudy][eachDomain][param]["output"])
                         for idx in range(num_random):
                             time_series = self.results[eachStudy][eachDomain][param]["output"][idx]
                             times = []
@@ -184,28 +186,30 @@ class ResultsCollection(object):
 def merge_images_x(output_path, input_paths):
 
     images = map(Image.open, input_paths)
-    widths, heights = zip(*(i.size for i in images))
-    total_width = sum(widths)
-    max_height = max(heights)
-
-    new_im = Image.new('RGB', (total_width, max_height))
-    x_offset = 0
-    for im in images:
-        new_im.paste(im, (x_offset, 0))
-        x_offset += im.size[0]
-    new_im.save(output_path)
+    if len(images)>0:
+        widths, heights = zip(*(i.size for i in images))
+        total_width = sum(widths)
+        max_height = max(heights)
+    
+        new_im = Image.new('RGB', (total_width, max_height))
+        x_offset = 0
+        for im in images:
+            new_im.paste(im, (x_offset, 0))
+            x_offset += im.size[0]
+        new_im.save(output_path)
 
 
 def merge_images_y(output_path, input_paths):
 
     images = map(Image.open, input_paths)
-    widths, heights = zip(*(i.size for i in images))
-    max_width = max(widths)
-    total_height = sum(heights)
-
-    new_im = Image.new('RGB', (max_width, total_height))
-    y_offset = 0
-    for im in images:
-        new_im.paste(im, (0, y_offset))
-        y_offset += im.size[1]
-    new_im.save(output_path)
+    if len(images)>0:
+        widths, heights = zip(*(i.size for i in images))
+        max_width = max(widths)
+        total_height = sum(heights)
+    
+        new_im = Image.new('RGB', (max_width, total_height))
+        y_offset = 0
+        for im in images:
+            new_im.paste(im, (0, y_offset))
+            y_offset += im.size[1]
+        new_im.save(output_path)

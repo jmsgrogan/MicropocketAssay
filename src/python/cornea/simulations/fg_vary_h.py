@@ -7,19 +7,20 @@ import cornea.parameters.default_parameters
 study_list = []
 height = 1.0  # mm
 
-for idx in range(4):
+for idx in range(3):
     dimless_height = (height - 0.1*float(idx))
-    study_list.append({"name": "pde_h_"+str(int(round(dimless_height*1000.0))),
-                       "switches": {"UseFixedGradient": False,
-                                    "PelletConcentration": 100.0*mole_per_metre_cubed,
+    study_list.append({"name": "fg_h_"+str(int(round(dimless_height*1000.0))),
+                       "switches": {"UseFixedGradient": True,
+                                    "PelletConcentration": 1.e-7*mole_per_metre_cubed,
                                     "PelletHeight": dimless_height*1e-3*metres,
                                     "ChemotacticStrength": 1.0}})
 
 run_id = uuid.uuid4()
-master_work_dir = "Python/Cornea/Study_pde_vary_h" + str(run_id) + "/"
-random_seeds = [1234, 5678, 9101112]
-domains = ["Planar_2D", "Planar_2D_Finite", "Circle_2D", 
-           "Planar_3D_Finite", "Circle_3D", "Hemisphere"]
+master_work_dir = "Python/Cornea/Study_fg_vary_h" + str(run_id) + "/"
+#random_seeds = [1234, 5678, 9101112]
+#domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
+random_seeds = [1234]
+domains = ["Planar_2D", "Circle_2D"]
 study_names = [x["name"] for x in study_list]
 study_data = {"random_seeds": random_seeds,
               "domain_types": domains,
