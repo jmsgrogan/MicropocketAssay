@@ -18,7 +18,7 @@ for idx in range(3):
 run_id = uuid.uuid4()
 master_work_dir = "Python/Cornea/Study_pde_vary_h" + str(run_id) + "/"
 random_seeds = [1234, 5678, 9101112]
-domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
+domains = ["Planar_2D"]
 study_names = [x["name"] for x in study_list]
 study_data = {"random_seeds": random_seeds,
               "domain_types": domains,

@@ -325,5 +325,5 @@ if __name__ == '__main__':
     do_density_domain_comparisons(rc)
     do_density_position_summary(rc)
 
-    #do_line_density_overview(rc)
-    do_front_position_overview(rc)
+    do_line_density_overview(rc)
+    #do_front_position_overview(rc)
