@@ -12,7 +12,7 @@ import sys
 import pickle
 from mpi4py import MPI
 
-n_workers = 16
+n_workers = 6
 start_worker = 'worker'
 usage = 'Program should be started without argument'
 
@@ -30,6 +30,7 @@ if len(sys.argv) == 1:
     msg_list = study + ([StopIteration] * n_workers)
 
     # Spawn workers
+    print sys.argv[0]
     comm = MPI.COMM_WORLD.Spawn(
         sys.executable,
         args=[sys.argv[0], start_worker],
@@ -57,7 +58,7 @@ if len(sys.argv) == 1:
 
 # Worker
 elif sys.argv[1] == start_worker:
-
+    print "started worker"
     # Connect to parent
     try:
         comm = MPI.Comm.Get_parent()
@@ -67,10 +68,12 @@ elif sys.argv[1] == start_worker:
 
     # Ask for work until stop sentinel
     local_comm = MPI.COMM_WORLD.Split(color=rank, key=rank)
+    print "Parent rant", comm.Get_rank()
     print "Worker rank", local_comm.Get_rank()
 
     log = []
-    for task in iter(lambda: comm.sendrecv(dest=0), StopIteration):
+    no_msg=0
+    for task in iter(lambda: comm.sendrecv(no_msg, dest=0), StopIteration):
         print "Worker task", task
         time.sleep(2)
 

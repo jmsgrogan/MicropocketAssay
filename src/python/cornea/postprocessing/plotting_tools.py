@@ -59,7 +59,7 @@ class ResultsCollection(object):
                                    "location_max": "Max Position (um)",
                                    "density_max": "Max Density (um^-2)"}
         self.density_plot_keys = {"Line_density": r"Line Density - $\mu m$ per $\mu m^2$",
-                                  "Tip_density": r"Line Density - $\mu m$ per $\mu m^2$",
+                                  "Tip_density": r"Tip Density - $\mu m$ per $\mu m^2$",
                                   "Branch_density": r"Branch Density - $\mu m^{-1}$",
                                   "PDE": r"Concentration - nanomolar"}
         self.parameters = [OutputParameter(name="Line_density"),
