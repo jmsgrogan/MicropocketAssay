@@ -9,7 +9,11 @@ def get_density_profile(x, t, c_50, c_p, h, epsilon, n_max, v, P_max):
     #n = n_max*(1.0-np.exp(-P*(t - x/v)))
     n_0 = 0.025
     v = 20.0
-    n = n_max*(v/P)*(1-np.exp((P/v)*(x-v*t)))
+    n = n_max*(v/P)*(1-np.exp(-P*(t-x/v)))
+
+#     dndx = 1.0
+#     n = n_max*dndx*x*(v*t-x)
+
     out_of_bound_indices = x > v*t
     n[out_of_bound_indices] = 0.0
     return n
@@ -24,9 +28,9 @@ def get_tip_density_profile(x, t, c_50, c_p, h, epsilon, n_max, v, P_max):
     #n = (n_max/(1.0-v/(P*h_ref)))*(np.exp(-v*(t-x/v)/h_ref)-np.exp(-P*(t-x/v)))
     n = n_max*np.exp(-P*(t-x/v))
     out_of_bound_indices = x >v*t
-    
-    #n[out_of_bound_indices] = 0.0
+    n[out_of_bound_indices] = 0.0
     return n
+
 
 def vary_P(workdir):
 
@@ -175,9 +179,9 @@ def plot_max_density_variation(workdir):
 workdir = "/home/grogan/test/"
 #plot_max_density_variation(workdir)
 #vary_P(workdir)
-#vary_c_p(workdir)
-#vary_c_p_tip(workdir)
-vary_c_p_tip_x0(workdir)
+vary_c_p(workdir)
+vary_c_p_tip(workdir)
+#vary_c_p_tip_x0(workdir)
 #vary_h(workdir)
 
 plt.show()
