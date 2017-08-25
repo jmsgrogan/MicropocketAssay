@@ -42,7 +42,7 @@ chaste.init(comm=local_comm)
 if rank == 0:
 
     # Master process executes code below
-    work_dir = "Python/Cornea/Study_fg_vary_cp1719e8ca-93d2-4d20-a751-eb4c61996378/"
+    work_dir = "Python/Cornea/Fig7_700/"
     tm = PostProcessingTaskManager(work_dir)
     #tm.setup_density_line_plots()
     tm.setup_line_density_plot_merge()

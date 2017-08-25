@@ -14,7 +14,7 @@ import pickle
 import chaste
 import microvessel_chaste.simulation
 from microvessel_chaste.utility import *
-from cornea.simulations.fg_vary_cp import study, master_work_dir, study_data
+from cornea.simulations.pde_vary_h import study, master_work_dir, study_data
 from mpi4py import MPI
 
 

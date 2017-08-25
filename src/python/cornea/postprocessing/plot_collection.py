@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from PIL import Image
 from microvessel_chaste.utility import *
@@ -7,6 +8,10 @@ from microvessel_chaste.utility import *
 from cornea.parameters.parameter_collection import SimulationParameterCollection
 import cornea.analytical_solutions.solution_collection
 from cornea.postprocessing import plotting_tools
+
+matplotlib.rcParams.update({'font.size': 18})
+matplotlib.rcParams['axes.linewidth'] = 2.0 #set the value globally
+plt.locator_params(nticks=4)
 
 
 _density_plot_keys = {"Line_density": r"Line Density - $\mu m$ per $\mu m^2$",
@@ -22,7 +27,7 @@ _location_plot_keys = {"location_min": "Front Position (um)",
 
 class PostProcessingTask(object):
 
-    def __init__(self, work_dir, colormap=plt.cm.viridis, resolution=90):
+    def __init__(self, work_dir, colormap=plt.cm.viridis, resolution=180):
 
         self.work_dir = work_dir
         self.colormap = colormap
@@ -179,17 +184,21 @@ class DensityLinePlot(PostProcessingTask):
         self.get_line_properties()
 
         self.fig.ax.axvline(self.left_line_loc,
-                            color=self.left_line_color,
-                            linestyle='--', lw=1)
+                            color=self.left_line_color, lw=3.0)
         self.fig.ax.axvline(self.right_line_loc,
-                            color=self.right_line_color,
-                            linestyle='--', lw=1)
+                            color=self.right_line_color, lw=3.0)
 
-        ax.set_xlabel(self.x_title)
-        ax.set_ylabel(_density_plot_keys[self.param.name])
+        #ax.set_xlabel(self.x_title)
+        #ax.set_ylabel(_density_plot_keys[self.param.name])
         max_result = 0.0
         colorscale = np.linspace(0, 1, len(self.results))
         colors = [self.colormap(i) for i in colorscale]
+        
+        result_factor = 1.0
+        if "Tip" in self.param.name:
+            result_factor = 1.e-6
+        elif "Line" in self.param.name:
+            result_factor = 1.e-3
 
         for jdx, eachTimeStep in enumerate(self.results):
             time, results, locations = eachTimeStep
@@ -198,19 +207,24 @@ class DensityLinePlot(PostProcessingTask):
                 analytical_method = getattr(cornea.analytical_solutions.solution_collection,
                                             self.analytical_solution)
                 ana_results = analytical_method(locations, time, self.pc)
-                self.fig.ax.plot(locations, ana_results, color='black', lw=1)
-            self.fig.ax.plot(locations, smooth_result, color=colors[jdx], lw=1)
-            local_max = np.max(smooth_result)
+                self.fig.ax.plot(locations, ana_results/result_factor, color='black', lw=3.0)
+            self.fig.ax.plot(locations, smooth_result/result_factor, color=colors[jdx], lw=3.0)
+            local_max = np.max(smooth_result/result_factor)
             if local_max > max_result:
                 max_result = local_max
-        ylim = ax.get_ylim()
+        #ylim = ax.get_ylim()
         #self.fig.ax.set_ylim([0, ylim[1]])
         if "Tip" in self.param.name:
-            self.fig.ax.set_ylim([0, 3.e-5])
-        if "Line" in self.param.name:
-            self.fig.ax.set_ylim([0, 0.018])
-        self.fig.ax.annotate('Limbus', xy=(150, max_result*0.99), color="C0")
-        self.fig.ax.annotate('Pellet', xy=(950, max_result*0.99), color="C3")
+            y_max = 40
+        elif "Line" in self.param.name:
+            y_max = 20
+        else:
+            y_max = ax.get_ylim()[1]
+
+        self.fig.ax.set_xticks([0, 250, 500, 750, 1000])
+        self.fig.ax.set_ylim([0, y_max])
+        #self.fig.ax.annotate('Limbus', xy=(150, y_max*0.99), color="C0")
+        #self.fig.ax.annotate('Pellet', xy=(850, y_max*0.99), color="C3")
         self.write()
 
     def write(self):

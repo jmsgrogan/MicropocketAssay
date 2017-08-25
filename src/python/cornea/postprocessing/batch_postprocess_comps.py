@@ -1,4 +1,5 @@
 import os
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import chaste
@@ -7,6 +8,8 @@ import cornea.analytical_solutions
 from cornea.postprocessing.plotting_tools import *
 from cornea.postprocessing import plot_collection
 
+matplotlib.rcParams.update({'font.size': 18})
+plt.locator_params(nticks=4)
 
 class PostProcessingTaskManager(object):
 
@@ -81,7 +84,6 @@ class PostProcessingTaskManager(object):
                                                   merge_axis=1)
                 self.tasks.append(task)
 
-
     def setup_density_domain_comparisons(self):
 
         for eachStudy in self.study_data["study_names"]:
@@ -115,7 +117,7 @@ class PostProcessingTaskManager(object):
                     plot_path = work_dir + eachVar + "_" + param + ".png"
                     fig.savefig(plot_path, bbox_inches='tight', dpi=dpi)
 
-    def setup_density_domain_comparisons_merge():
+    def setup_density_domain_comparisons_merge(self):
 
         for eachStudy in rc.study_data["study_names"]:
             outer_plot_list = []

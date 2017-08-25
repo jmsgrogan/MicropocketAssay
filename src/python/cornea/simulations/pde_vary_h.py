@@ -5,21 +5,24 @@ from microvessel_chaste.utility import *
 import cornea.parameters.default_parameters
 
 study_list = []
-height = 1.0  # mm
+height = 0.7 # mm
 
-for idx in range(4):
+for idx in range(1):
     dimless_height = (height - 0.1*float(idx))
     study_list.append({"name": "pde_h_"+str(int(round(dimless_height*1000.0))),
                        "switches": {"UseFixedGradient": False,
-                                    "PelletConcentration": 100.0*mole_per_metre_cubed,
-                                    "PelletHeight": dimless_height*1e-3*metres,
-                                    "ChemotacticStrength": 1.0}})
+                                    "PelletConcentration": 400.0*mole_per_metre_cubed,
+                                    "VegfBindingConstant": 20.0,
+                                    "PelletHeight": dimless_height*1e-3*metres}})
 
 run_id = uuid.uuid4()
 master_work_dir = "Python/Cornea/Study_pde_vary_h" + str(run_id) + "/"
-random_seeds = [1234, 5678, 9101112, 4634643, 345345]
+random_seeds = [1234, 5678, 9101112]
+random_seeds = [1234]
 domains = ["Planar_2D", "Planar_2D_Finite", "Circle_2D", 
            "Planar_3D_Finite", "Circle_3D", "Hemisphere"]
+
+#domains = ["Planar_2D",  "Planar_2D_Finite"]
 study_names = [x["name"] for x in study_list]
 study_data = {"random_seeds": random_seeds,
               "domain_types": domains,
