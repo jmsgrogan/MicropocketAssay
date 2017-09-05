@@ -45,11 +45,10 @@ if rank == 0:
     work_dir = "Python/Cornea/Fig7_700/"
     tm = PostProcessingTaskManager(work_dir)
     #tm.setup_density_line_plots()
-    tm.setup_line_density_plot_merge()
+    #tm.setup_line_density_plot_merge()
+    tm.setup_box_plots()
 
     tasks = tm.tasks
-    print len(tasks)
-
     task_index = 0
     num_workers = size - 1
     closed_workers = 0

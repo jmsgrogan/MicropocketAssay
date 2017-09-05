@@ -9,10 +9,10 @@ from cornea.parameters.parameter_collection import SimulationParameterCollection
 import cornea.analytical_solutions.solution_collection
 from cornea.postprocessing import plotting_tools
 
+# Global matplotlib settings
 matplotlib.rcParams.update({'font.size': 18})
-matplotlib.rcParams['axes.linewidth'] = 2.0 #set the value globally
+matplotlib.rcParams['axes.linewidth'] = 2.0  # set the value globally
 plt.locator_params(nticks=4)
-
 
 _density_plot_keys = {"Line_density": r"Line Density - $\mu m$ per $\mu m^2$",
                       "Tip_density": r"Tip Density - $\mu m^{-2}$",
@@ -193,7 +193,7 @@ class DensityLinePlot(PostProcessingTask):
         max_result = 0.0
         colorscale = np.linspace(0, 1, len(self.results))
         colors = [self.colormap(i) for i in colorscale]
-        
+
         result_factor = 1.0
         if "Tip" in self.param.name:
             result_factor = 1.e-6
@@ -223,8 +223,6 @@ class DensityLinePlot(PostProcessingTask):
 
         self.fig.ax.set_xticks([0, 250, 500, 750, 1000])
         self.fig.ax.set_ylim([0, y_max])
-        #self.fig.ax.annotate('Limbus', xy=(150, y_max*0.99), color="C0")
-        #self.fig.ax.annotate('Pellet', xy=(850, y_max*0.99), color="C3")
         self.write()
 
     def write(self):
@@ -233,62 +231,76 @@ class DensityLinePlot(PostProcessingTask):
         self.fig.savefig(self.filename, bbox_inches='tight', dpi=self.resolution)
 
 
-class DomainDensityComparison(PostProcessingTask):
+class BoxPlot(PostProcessingTask):
 
-    def __init__(self, work_dir, study, domains, num_random, param,
-                 filename, location_key):
+    def __init__(self, work_dir, study, domains, num_random, params, filename):
 
-        super(DomainDensityComparison, self).__init__(work_dir)
+        super(BoxPlot, self).__init__(work_dir)
 
-        self.right_line_loc = 1000.0
-        self.result_left_offset = 0
         self.study = study
+        self.colormap = plt.cm.Accent
         self.domains = domains
-        self.param = param
-        self.location_key = location_key
+        self.params = params
         self.num_random = num_random
-        self.pc = None
+        self.result_left_offset = 0
         self.results = None
         self.fig = None
-        self.x_title = r"Position - $\mu m$"
-        self.analytical_solution = None
+        self.x_title = r""
         self.filename = filename
+        self.work_dir = work_dir
 
-    def get_line_properties(self):
-
-        height = self.pc.get_parameter("PelletHeight").value
-        height = height.Convert(1.0e-6*metres)
-        offset = self.pc.get_parameter("LimbalOffset").value
-        offset = offset.Convert(1.0e-6*metres)
-        self.right_line_loc = height + offset
-        if "Hemisphere" in self.domain:
-            radius = self.pc.get_parameter("CorneaRadius").value
-            radius = radius.Convert(1.0e-6*metres)
-            self.right_line_loc = radius*np.arcsin(self.right_line_loc/radius)
+    def domain_is_3d(self, domain_type):
+        return ("3D" in domain_type or "Hemi" in domain_type)
 
     def load_data(self):
 
-        simulation_dir = plotting_tools.get_path(self.study,
-                                                 self.domain,
-                                                 str(self.run_number))
-        self.pc = SimulationParameterCollection()
-        if not os.path.isfile(simulation_dir + "input_parameters.p"):
-            return
-        self.pc.load(simulation_dir + "input_parameters.p")
+        self.results = {}
 
-        results_dir = plotting_tools.get_path(self.study, self.domain,
-                                              str(self.run_number),
-                                              self.param.name)
-        locations, values = plotting_tools.process_csv(results_dir + ".txt")
-        sampled_values = values[::self.param.sampling_frequency]
-        self.results = []
-        for eachResult in sampled_values:
-            current_time = eachResult[0]
-            density_values = np.array(eachResult[1])
-            density_values = self.correct_for_thickness(density_values)
-            offset_result = density_values[self.result_left_offset:]
-            offset_locations = locations[self.result_left_offset:]
-            self.results.append([current_time, offset_result, offset_locations])
+        params = ["Tip", "Line"]
+        for eachDomain in self.domains:
+            self.results[eachDomain] = []
+            for jdx, param_name in enumerate(params):
+                self.results[eachDomain].append({"density_max": [],
+                                                 "location_max": [],
+                                                 "location_mid": [],
+                                                 "location_min": []})
+                for idx in range(self.num_random):
+                    simulation_dir = plotting_tools.get_path(self.work_dir,
+                                                             self.study,
+                                                             eachDomain,
+                                                             str(idx))
+                    pc = SimulationParameterCollection()
+                    if not os.path.isfile(simulation_dir + "input_parameters.p"):
+                        continue
+                    pc.load(simulation_dir + "input_parameters.p")
+
+                    locations, values = plotting_tools.process_csv(simulation_dir + "Sampled_" + param_name + "_density.txt")
+                    thickness = pc.get_parameter("CorneaThickness").value
+                    thickness = thickness.Convert(1.e-6*metres)
+                    sampled_values = values[::self.params[jdx].sampling_frequency]
+                    last_time_result = sampled_values[-1]
+                    time = last_time_result[0]
+                    profile = np.array(last_time_result[1])
+                    if "density" in self.params[jdx].name and self.domain_is_3d(eachDomain):
+                        profile *= thickness
+
+                    offset_result = profile[self.result_left_offset:]
+                    smooth_result = plotting_tools.smooth_results(np.array(offset_result))
+                    offset_locations = locations[self.result_left_offset:]
+
+                    self.results[eachDomain][jdx]["density_max"].append(np.max(smooth_result))
+                    max_arg = np.argmax(smooth_result)
+                    self.results[eachDomain][jdx]["location_max"].append(offset_locations[max_arg])
+                    mid_val = smooth_result[max_arg]/2.0
+                    mid_index = (np.abs(smooth_result-mid_val)).argmin()
+                    if mid_index < max_arg:
+                        mid_index = max_arg
+                    self.results[eachDomain][jdx]["location_mid"].append(offset_locations[mid_index]) 
+                    min_val = 0.01*smooth_result[max_arg]
+                    min_index = (np.abs(smooth_result-min_val)).argmin()
+                    if min_index < mid_index:
+                        min_index = mid_index
+                    self.results[eachDomain][jdx]["location_min"].append(offset_locations[min_index]) 
 
     def generate(self):
 
@@ -296,30 +308,53 @@ class DomainDensityComparison(PostProcessingTask):
         if self.results is None:
             return
 
+        colorscale = np.linspace(0, 1, len(self.domains))
+        colors = [self.colormap(i) for i in colorscale]
+        width = 0.3
+        alpha = 0.6
+        
+        domain_abbreviations = {"Planar_2D": "P2D",
+                       "Planar_2D_Finite": "P2DF",
+                       "Circle_2D": "C2D",
+                       "Planar_3D":  "P3D",
+                       "Planar_3D_Finite": "P3DF",
+                       "Circle_3D": "C3D",
+                       "Hemisphere": "H"}
+
+        # Positions
         self.fig, ax = plt.subplots()
         self.fig.ax = ax
-        self.fig.ax.set_xlabel("Time (hr)")
-        self.fig.ax.set_ylabel(_location_plot_keys[self.location_key])
-        if "location" in self.location_key:
-            ax.set_ylim([0, self.right_line_loc])
-        for eachDomain in self.domains:
+        ax.set_ylabel("Location (um)")
+        ind = np.arange(len(self.domains))
+        ax.set_xticks(ind + width)
+        ax.set_xticklabels([domain_abbreviations[x] for x in self.domains])
+        for idx, eachDomain in enumerate(self.domains):
+            results = self.results[eachDomain][0]["location_max"]
+            ax.bar(ind[idx] + 0.0*width, np.mean(results), width, color=colors[idx], yerr=np.std(results), alpha=alpha, edgecolor='black')
+            results = self.results[eachDomain][0]["location_mid"]
+            ax.bar(ind[idx] + 1.0*width, np.mean(results), width, color=colors[idx], yerr=np.std(results), alpha=alpha, edgecolor='black')            
+            results = self.results[eachDomain][0]["location_min"]
+            ax.bar(ind[idx] + 2.0*width, np.mean(results), width, color=colors[idx], yerr=np.std(results), alpha=alpha, edgecolor='black')            
+        ax.set_ylim([0, 1100])
+        self.fig.savefig(self.filename+"locations.png", bbox_inches='tight', dpi=self.resolution)
 
-            res = rc.results[eachStudy][eachDomain][param]["output"]
-            for idx in range(self.num_random):
-                if len(res)<=idx:
-                    continue
-                time_series = res[idx]
-                times = []
-                local_results = []
-                for eachTime in time_series:
-                    times.append(eachTime["time"])
-                    local_results.append(eachTime[eachVar])
-                smooth_result = smooth_results(local_results)
-                if idx == 0:
-                    ax.plot(np.array(times), smooth_result, lw=1, label=eachDomain)
-        ax.legend(loc='upper center')
-        self.write()
+        # Density
+        self.fig, ax = plt.subplots()
+        self.fig.ax = ax
+        ax2 = ax.twinx()
+        ax2.set_ylabel("Max Line Density (um^-1)")
+        ax.set_ylabel("Max Tip Density (um^-2)")
+        ind = np.arange(len(self.domains))
+        ax.set_xticks(ind + width)
+        ax.set_xticklabels([domain_abbreviations[x] for x in self.domains])
+        for idx, eachDomain in enumerate(self.domains):
+            results = self.results[eachDomain][0]["density_max"]
+            ax.bar(ind[idx] + 0.0*width, 1.e6*np.mean(results), width, color=colors[idx], yerr=1.e6*np.std(results), alpha=alpha, edgecolor='black')
+            results = self.results[eachDomain][1]["density_max"]
+            ax2.bar(ind[idx] + 1.0*width, 1.e3*np.mean(results), width, color=colors[idx], yerr=1.e3*np.std(results), alpha=alpha, edgecolor='black')                      
+        #ax.set_ylim([0, 1100])
+        self.fig.savefig(self.filename+"density.png", bbox_inches='tight', dpi=self.resolution)
 
     def write(self):
-
-        self.fig.savefig(self.filename, bbox_inches='tight', dpi=self.resolution)
+        pass
+        
