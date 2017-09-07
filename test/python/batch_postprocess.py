@@ -14,7 +14,7 @@ import pickle
 import chaste
 import microvessel_chaste.simulation
 from microvessel_chaste.utility import *
-from cornea.simulations.fg_vary_cp import study, master_work_dir, study_data
+#from cornea.simulations.fg_vary_cp import study, master_work_dir, study_data
 from cornea.postprocessing.batch_postprocess_comps import PostProcessingTaskManager
 
 from mpi4py import MPI
@@ -42,11 +42,11 @@ chaste.init(comm=local_comm)
 if rank == 0:
 
     # Master process executes code below
-    work_dir = "Python/Cornea/Study_full_activation/"
+    work_dir = "Python/Cornea/Fig8_c/"
     tm = PostProcessingTaskManager(work_dir)
     tm.setup_density_line_plots()
-    #tm.setup_line_density_plot_merge()
-    #tm.setup_box_plots()
+    tm.setup_line_density_plot_merge()
+    tm.setup_box_plots()
 
     tasks = tm.tasks
     task_index = 0

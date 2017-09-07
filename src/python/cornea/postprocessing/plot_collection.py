@@ -14,15 +14,14 @@ matplotlib.rcParams.update({'font.size': 18})
 matplotlib.rcParams['axes.linewidth'] = 2.0  # set the value globally
 plt.locator_params(nticks=4)
 
-_density_plot_keys = {"Line_density": r"Line Density - $\mu m$ per $\mu m^2$",
-                      "Tip_density": r"Tip Density - $\mu m^{-2}$",
-                      "Branch_density": r"Branch Density - $\mu m^{-1}$",
+_density_plot_keys = {"Line_density": r"Line Density - $\mu m$ per $\mu m^3$",
+                      "Tip_density": r"Tip Density - $\mu m^{-3}$",
                       "PDE": r"Concentration - nanomolar"}
 
 _location_plot_keys = {"location_min": "Front Position (um)",
                        "location_mid": "Mid Position (um)",
                        "location_max": "Max Position (um)",
-                       "density_max": "Max Density (um^-2)"}
+                       "density_max": "Max Density (um^-3)"}
 
 
 class PostProcessingTask(object):
@@ -116,17 +115,6 @@ class DensityLinePlot(PostProcessingTask):
         self.analytical_solution = None
         self.filename = filename
 
-    def correct_for_thickness(self, results):
-
-        if "density" in self.param.name and self.domain_is_3d(self.domain):
-            thickness = self.pc.get_parameter("CorneaThickness").value
-            thickness = thickness.Convert(1.0e-6*metres)
-            results *= thickness
-        return results
-
-    def domain_is_3d(self, domain_type):
-        return ("3D" in domain_type or "Hemi" in domain_type)
-
     def load_data(self):
 
         simulation_dir = plotting_tools.get_path(self.work_dir,
@@ -150,7 +138,6 @@ class DensityLinePlot(PostProcessingTask):
         for eachResult in sampled_values:
             current_time = eachResult[0]
             density_values = np.array(eachResult[1])
-            density_values = self.correct_for_thickness(density_values)
             offset_result = density_values[self.result_left_offset:]
             offset_locations = locations[self.result_left_offset:]
             self.results.append([current_time, offset_result, offset_locations])
@@ -196,9 +183,9 @@ class DensityLinePlot(PostProcessingTask):
 
         result_factor = 1.0
         if "Tip" in self.param.name:
-            result_factor = 1.e-6
+            result_factor = 1.e-8
         elif "Line" in self.param.name:
-            result_factor = 1.e-3
+            result_factor = 1.e-5
 
         for jdx, eachTimeStep in enumerate(self.results):
             time, results, locations = eachTimeStep
@@ -215,9 +202,9 @@ class DensityLinePlot(PostProcessingTask):
         #ylim = ax.get_ylim()
         #self.fig.ax.set_ylim([0, ylim[1]])
         if "Tip" in self.param.name:
-            y_max = 40
+            y_max = 1000
         elif "Line" in self.param.name:
-            y_max = 20
+            y_max = 140
         else:
             y_max = ax.get_ylim()[1]
 
@@ -249,9 +236,6 @@ class BoxPlot(PostProcessingTask):
         self.filename = filename
         self.work_dir = work_dir
 
-    def domain_is_3d(self, domain_type):
-        return ("3D" in domain_type or "Hemi" in domain_type)
-
     def load_data(self):
 
         self.results = {}
@@ -275,14 +259,10 @@ class BoxPlot(PostProcessingTask):
                     pc.load(simulation_dir + "input_parameters.p")
 
                     locations, values = plotting_tools.process_csv(simulation_dir + "Sampled_" + param_name + "_density.txt")
-                    thickness = pc.get_parameter("CorneaThickness").value
-                    thickness = thickness.Convert(1.e-6*metres)
                     sampled_values = values[::self.params[jdx].sampling_frequency]
                     last_time_result = sampled_values[-1]
                     time = last_time_result[0]
                     profile = np.array(last_time_result[1])
-                    if "density" in self.params[jdx].name and self.domain_is_3d(eachDomain):
-                        profile *= thickness
 
                     offset_result = profile[self.result_left_offset:]
                     smooth_result = plotting_tools.smooth_results(np.array(offset_result))
@@ -335,15 +315,15 @@ class BoxPlot(PostProcessingTask):
             ax.bar(ind[idx] + 1.0*width, np.mean(results), width, color=colors[idx], yerr=np.std(results), alpha=alpha, edgecolor='black')            
             results = self.results[eachDomain][0]["location_min"]
             ax.bar(ind[idx] + 2.0*width, np.mean(results), width, color=colors[idx], yerr=np.std(results), alpha=alpha, edgecolor='black')            
-        ax.set_ylim([0, 1100])
+        ax.set_ylim([0, 1200])
         self.fig.savefig(self.filename+"locations.png", bbox_inches='tight', dpi=self.resolution)
 
         # Density
         self.fig, ax = plt.subplots()
         self.fig.ax = ax
         ax2 = ax.twinx()
-        ax2.set_ylabel("Max Line Density (um^-1)")
-        ax.set_ylabel("Max Tip Density (um^-2)")
+        ax2.set_ylabel("Max Line Density (um^-2)")
+        ax.set_ylabel("Max Tip Density (um^-3)")
         ind = np.arange(len(self.domains))
         ax.set_xticks(ind + width)
         ax.set_xticklabels([domain_abbreviations[x] for x in self.domains])
