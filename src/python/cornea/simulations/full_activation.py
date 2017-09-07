@@ -23,7 +23,7 @@ run_id = uuid.uuid4()
 master_work_dir = "Python/Cornea/Study_full_activation" + str(run_id) + "/"
 random_seeds = [1234]
 domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
-#domains = ["Planar_2D"]
+domains = ["Planar_2D"]
 study_names = [x["name"] for x in study_list]
 study_data = {"random_seeds": random_seeds,
               "domain_types": domains,
@@ -43,7 +43,7 @@ for eachStudy in study_list:
             v = pc.get_parameter("TipVelocity").value.Convert(1.0*metre_per_second)
             t = h/v
             pc.get_parameter("TotalTime").value = 3600.0*round(0.9*t/3600.0)*seconds
-            pc.get_parameter("SampleSpacingX").value = 30.0e-6*metres
+            pc.get_parameter("SampleSpacingX").value = 180.0e-6*metres
             pc.get_parameter("DomainType").value = eachDomainType
             pc.get_parameter("RunNumber").value = run_number
             pc.get_parameter("RandomSeed").value = int(eachSeed)

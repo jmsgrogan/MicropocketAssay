@@ -41,22 +41,16 @@ _default_collection.add_parameter(Parameter("ElementArea3d", 1e4*(1.e-18*metres_
 _default_collection.add_parameter(Parameter("NodeSpacing", 20.0*1.e-6*metres,
                                            min_val = 1.0, max_val = 1.0, symbol = "\Delta n",
                                            nice_name = "Node Spacing"))
-_default_collection.add_parameter(Parameter("DensityGridSpacing", 40.0*1.e-6*metres,
-                                           min_val = 1.0, max_val = 1.0, symbol = "\Delta x_{\rho}",
-                                           nice_name = "Density Grid Spacing"))
-_default_collection.add_parameter(Parameter("SampleSpacingX", 60.0*1.e-6*metres,
+_default_collection.add_parameter(Parameter("SampleSpacingX", 180.0*1.e-6*metres,
                                            min_val = 1.0, max_val = 1.0, symbol = "\Delta x_{s}",
                                            nice_name = "Sample Spacing X"))
 _default_collection.add_parameter(Parameter("SampleSpacingY", 60.0*1.e-6*metres,
                                            min_val = 1.0, max_val = 1.0, symbol = "\Delta y_{s}",
                                            nice_name = "Sample Spacing Y"))
-_default_collection.add_parameter(Parameter("SampleSpacingZ", 33.0*1.e-6*metres,
-                                           min_val = 1.0, max_val = 1.0, symbol = "\Delta z_{s}", 
-                                           nice_name = "Sample Spacing Z"))
 
 # Domain Switches
-_default_collection.add_parameter(Parameter("UsePellet", True))  
-_default_collection.add_parameter(Parameter("FinitePelletWidth", False)) 
+_default_collection.add_parameter(Parameter("UsePellet", True))
+_default_collection.add_parameter(Parameter("FinitePelletWidth", False))
 
 # Angiogenesis details
 _default_collection.add_parameter(Parameter("SproutingProbability", (0.015 /3600.0)*per_second, 

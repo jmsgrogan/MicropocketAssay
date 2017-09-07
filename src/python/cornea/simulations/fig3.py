@@ -5,7 +5,8 @@ from microvessel_chaste.utility import *
 import cornea.parameters.default_parameters
 
 study_list = []
-cp = [100.0, 20.0, 1.0] # nM
+cp = [100.0, 20.0, 1.0]  # nM
+cp = [100.0]  # nM
 
 for idx in range(len(cp)):
     dimless_c = cp[idx]
@@ -21,8 +22,9 @@ for idx in range(len(cp)):
 run_id = uuid.uuid4()
 master_work_dir = "Python/Cornea/Study_fg_vary_cp" + str(run_id) + "/"
 random_seeds = [1234, 5678, 9101112]
-domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
-#domains = ["Planar_2D"]
+random_seeds = [1234]
+#domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
+domains = ["Planar_2D"]
 study_names = [x["name"] for x in study_list]
 study_data = {"random_seeds": random_seeds,
               "domain_types": domains,

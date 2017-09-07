@@ -19,9 +19,7 @@ class PostProcessingTaskManager(object):
         self.tasks = []
         self.study_data = None
         self.parameters = [OutputParameter(name="Line_density"),
-                           OutputParameter(name="Tip_density"),
-                           OutputParameter(name="Branch_density"),
-                           OutputParameter(name="PDE"), ]
+                           OutputParameter(name="Tip_density"), ]
         self.break_indices = []
         file_handler = chaste.core.OutputFileHandler(relative_work_dir, False)
         self.work_dir = file_handler.GetOutputDirectoryFullPath()
