@@ -31,7 +31,14 @@ def process_csv(file_name):
                 samples = eachrow[1:-1]
                 samples = [float(x) for x in samples]
                 results.append([time, samples])
-    return np.array(locations), results
+
+    locs = np.array(locations)
+    if "Hemisphere" in file_name:
+        locs = np.array([   27.41937131,    82.25410086,   137.07673098,   191.8790066,    246.6523757,
+                                301.38787643,   356.07596741,   410.70638359,   465.26798036,   519.74847022,
+                                574.13420342,   628.40989764,   682.55818963,   736.55924316,   790.39021913,
+                                844.02458178,   897.43122456,   950.57337014,  1003.40719375,  1055.88005599,])
+    return locs[:len(results[0][1])], results
 
 
 def get_most_recently_modified_dir(search_dir):

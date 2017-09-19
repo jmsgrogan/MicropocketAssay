@@ -98,3 +98,19 @@ class PostProcessingTaskManager(object):
                                            fig_dir)
             self.tasks.append(task)
 
+
+    def setup_pde_plots(self):
+        
+        for eachStudy in self.study_data["study_names"]:        
+            local_work_dir = get_path(self.work_dir, eachStudy)
+            fig_dir = local_work_dir + "/pde_plots/"
+            if not os.path.exists(fig_dir):
+                os.makedirs(fig_dir)
+            task = plot_collection.PdePlot(self.work_dir,
+                                           eachStudy,
+                                           self.study_data["domain_types"],
+                                           len(self.study_data["random_seeds"]),
+                                           self.parameters,
+                                           fig_dir)
+            self.tasks.append(task)
+

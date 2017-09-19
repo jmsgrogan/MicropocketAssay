@@ -19,10 +19,9 @@ for idx in range(len(cp)):
                                     "DoAnastamosis": True}})
 
 run_id = uuid.uuid4()
-master_work_dir = "Python/Cornea/Fig5_" + str(run_id) + "/"
-random_seeds = [1234, 5678, 9101112]
+master_work_dir = "Python/Cornea/Submission/Fig5_" + str(run_id) + "/"
+random_seeds = [23535, 7657546, 45353, 6675, 86327]
 domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
-#domains = ["Planar_2D"]
 study_names = [x["name"] for x in study_list]
 study_data = {"random_seeds": random_seeds,
               "domain_types": domains,
