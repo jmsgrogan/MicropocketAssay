@@ -65,7 +65,7 @@ def get_path(work_dir, study=None, domain=None, run=None, params=None):
 
 class OutputParameter():
 
-    def __init__(self, name, limits=None, line_color="C0", sampling_frequency=3):
+    def __init__(self, name, limits=None, line_color="C0", sampling_frequency=1):
         self.name = name
         self.limits = limits
         if limits is None:

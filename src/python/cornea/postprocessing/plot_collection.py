@@ -192,6 +192,9 @@ class DensityLinePlot(PostProcessingTask):
         for jdx, eachTimeStep in enumerate(self.results):
             time, results, locations = eachTimeStep
             smooth_result = plotting_tools.smooth_results(np.array(results))
+            if "Tip" in self.param.name:
+                print "Max density: ", self.domain, " t: ", time, " d: ", 1.e6*np.max(smooth_result)
+            
             if self.analytical_solution is not None:
                 analytical_method = getattr(cornea.analytical_solutions.solution_collection,
                                             self.analytical_solution)
@@ -295,8 +298,6 @@ class BoxPlot(PostProcessingTask):
                             diff = abs(smooth_result[check_index] - min_val)
                             if check_index >= mid_index:
                                 min_index = check_index
-                            print "param" , jdx , " domain: ", eachDomain, " new min: ", min_index, " diff ", diff, " mid ", mid_index, " check " , check_index
-                    print "*****"
                     self.results[eachDomain][jdx]["location_min"].append(offset_locations[min_index]) 
 
     def generate(self):
@@ -326,22 +327,29 @@ class BoxPlot(PostProcessingTask):
         ax.set_yticks(ind)
         ax.set_yticklabels([domain_abbreviations[x] for x in self.domains])
         for idx, eachDomain in enumerate(self.domains):
+            print "Loc ", eachDomain
             results = self.results[eachDomain][0]["location_max"]
+            print "max ", np.mean(results)
             ax.barh(ind[idx], np.mean(results), width, color='navy', xerr=np.std(results), alpha=alpha, edgecolor='black')
             results = self.results[eachDomain][0]["location_mid"]
+            print "mid ", np.mean(results)
             ax.barh(ind[idx], np.mean(results), width, color='navy', xerr=np.std(results), alpha=alpha, edgecolor='black')            
             results = self.results[eachDomain][0]["location_min"]
-            print 'min loc: ', eachDomain, ', ', results
+            print "min ", np.mean(results)
             ax.barh(ind[idx], np.mean(results), width, color='navy', xerr=np.std(results), alpha=alpha, edgecolor='black')
             ax.invert_yaxis()             
         ax.set_xlim([0, 1200])
         self.fig.savefig(self.filename+"locations.png", bbox_inches='tight', dpi=self.resolution)
         
         # Density
+        width = 6.0
+        alpha = 0.5
+        
         self.fig, ax = plt.subplots()
         self.fig.ax = ax
         ax.set_xlabel("Tip Density (1e6 um^-3)")
-        ax.set_xlim([0, 1.5])
+        #ax.set_xlim([0, 2])
+        ax.set_xlim([0, 12])
         ind = 6.0*np.arange(len(self.domains))
         tick_marks = list(ind)
         tick_marks.extend(list(ind+48.0))
@@ -352,7 +360,8 @@ class BoxPlot(PostProcessingTask):
         ax.get_yaxis().set_visible(False)
         #ax.set_xticklabels(tick_labels)
         for idx, eachDomain in enumerate(self.domains):
-            results = np.array(self.results[eachDomain][1]["density_max"])
+            results = np.array(self.results[eachDomain][0]["density_max"])
+            print "Density ", eachDomain, " mean: ",  1.e6*np.mean(results), " err: ",  1.e6*np.std(results)
             ax.barh(ind[idx] + 0.0*width, 1.e6*np.mean(results), width, color='navy', xerr=1.e6*np.std(results), alpha=alpha, edgecolor='black')
             ax.invert_yaxis()   
         self.fig.savefig(self.filename+"tip_density.png", bbox_inches='tight', dpi=self.resolution)        
@@ -364,7 +373,7 @@ class BoxPlot(PostProcessingTask):
         self.fig, ax = plt.subplots()
         self.fig.ax = ax
         ax.set_xlabel("Line Density (1e3 um^-2)")
-        ax.set_xlim([0, 0.3])
+        ax.set_xlim([0, 2.0])
         ind = 6.0*np.arange(len(self.domains))
         tick_marks = list(ind)
         tick_marks.extend(list(ind+48.0))
@@ -455,6 +464,7 @@ class PdePlot(PostProcessingTask):
         ax.set_xticklabels([domain_abbreviations[x] for x in self.domains])
         for idx, eachDomain in enumerate(self.domains):
             results = np.array(self.results[eachDomain]["line_frac"])
+            print "vasc frac ", eachDomain, " : ", np.mean(results)
             ax.bar(ind[idx] + 0.0*width, np.mean(results), width, color=colors[idx], yerr=np.std(results), alpha=alpha, edgecolor='black')                    
         self.fig.savefig(self.filename+"/vascularized_fraction.png", bbox_inches='tight', dpi=self.resolution)
 
