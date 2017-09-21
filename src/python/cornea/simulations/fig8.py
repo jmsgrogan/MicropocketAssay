@@ -5,7 +5,7 @@ from microvessel_chaste.utility import *
 import cornea.parameters.default_parameters
 
 study_list = []
-height = 0.7 # mm
+height = 1.0 # mm
 
 for idx in range(1):
     dimless_height = (height - 0.1*float(idx))
@@ -16,8 +16,7 @@ for idx in range(1):
                                     "PelletHeight": dimless_height*1e-3*metres}})
 
 run_id = uuid.uuid4()
-master_work_dir = "Python/Cornea/Submission/Fig8_b" + str(run_id) + "/"
-#random_seeds = [39938, 36832, 774754, 488293, 386534]
+master_work_dir = "Python/Cornea/Submission/Fig8_a" + str(run_id) + "/"
 random_seeds = [55746, 35758, 465334, 563327, 646354]
 domains = ["Planar_2D", "Planar_3D", "Planar_2D_Finite", "Circle_2D",
            "Planar_3D_Finite", "Circle_3D", "Hemisphere"]

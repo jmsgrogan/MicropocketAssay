@@ -99,7 +99,7 @@ _default_collection.add_parameter(Parameter("VegfBloodConcentration", 0.0*mole_p
 _default_collection.add_parameter(Parameter("VegfPermeability", (3.e-4/3600.0)*metre_per_second, 
                                            min_val = 0.0, max_val = 1.0, symbol = "\rho_{p}", 
                                            nice_name = "Vessel Permeability")) 
-_default_collection.add_parameter(Parameter("UptakeRatePerCell", (4.e-18/3600.0)*mole_per_second, 
+_default_collection.add_parameter(Parameter("UptakeRatePerCell", (4.e-19/3600.0)*mole_per_second, 
                                            min_val = 0.0, max_val = 10.0, symbol = "k_{ec}", 
                                            nice_name = "Uptake Rate Per Cell")) 
 

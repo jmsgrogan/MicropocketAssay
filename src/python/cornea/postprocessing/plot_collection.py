@@ -3,6 +3,7 @@ import numpy as np
 import glob
 import matplotlib
 import matplotlib.pyplot as plt
+import vtk
 from PIL import Image
 from microvessel_chaste.utility import *
 
@@ -267,6 +268,7 @@ class BoxPlot(PostProcessingTask):
                     sampled_values = values[::self.params[jdx].sampling_frequency]
                     last_time_result = sampled_values[-1]
                     time = last_time_result[0]
+                    print "density sample time: ", time
                     profile = np.array(last_time_result[1])
 
                     offset_result = profile[self.result_left_offset:]
@@ -348,8 +350,8 @@ class BoxPlot(PostProcessingTask):
         self.fig, ax = plt.subplots()
         self.fig.ax = ax
         ax.set_xlabel("Tip Density (1e6 um^-3)")
-        #ax.set_xlim([0, 2])
-        ax.set_xlim([0, 12])
+        ax.set_xlim([0, 1.5])  # Fig 5
+        #ax.set_xlim([0, 20])  # Fig 4
         ind = 6.0*np.arange(len(self.domains))
         tick_marks = list(ind)
         tick_marks.extend(list(ind+48.0))
@@ -373,7 +375,8 @@ class BoxPlot(PostProcessingTask):
         self.fig, ax = plt.subplots()
         self.fig.ax = ax
         ax.set_xlabel("Line Density (1e3 um^-2)")
-        ax.set_xlim([0, 2.0])
+        ax.set_xlim([0, 3.0])   # Fig 4
+        ax.set_xlim([0, 0.3])   # Fig 5
         ind = 6.0*np.arange(len(self.domains))
         tick_marks = list(ind)
         tick_marks.extend(list(ind+48.0))
@@ -480,6 +483,297 @@ class PdePlot(PostProcessingTask):
             ax.bar(ind[idx] + 0.0*width, np.mean(results), width, color=colors[idx], yerr=np.std(results), alpha=alpha, edgecolor='black')                    
         self.fig.savefig(self.filename+"/opening_angle.png", bbox_inches='tight', dpi=self.resolution)
 
+    def write(self):
+        pass
+
+
+class MaxTipDensityPlot(PostProcessingTask):
+
+    def __init__(self, work_dir, study, domains, num_random, params, filename):
+
+        super(MaxTipDensityPlot, self).__init__(work_dir)
+
+        self.study = study
+        self.colormap = plt.cm.Accent
+        self.domains = domains
+        self.params = params
+        self.num_random = num_random
+        self.result_left_offset = 0
+        self.results = None
+        self.fig = None
+        self.x_title = r""
+        self.filename = filename
+        self.work_dir = work_dir
+
+    def load_data(self):
+
+        self.results = {}
+
+        for eachDomain in self.domains:
+            self.results[eachDomain] = {"times": [],
+                                        "max_vals": []}
+            simulation_dir = plotting_tools.get_path(self.work_dir,
+                                                     self.study,
+                                                     eachDomain,
+                                                     str(0))
+            pc = SimulationParameterCollection()
+            if not os.path.isfile(simulation_dir + "input_parameters.p"):
+                continue
+            pc.load(simulation_dir + "input_parameters.p")
+            locations, values = plotting_tools.process_csv(simulation_dir + "Sampled_Tip_density.txt")
+            sampled_values = values[::1]
+
+            for eachTimeStep in sampled_values:
+                self.results[eachDomain]["times"].append(eachTimeStep[0])
+                profile = np.array(eachTimeStep[1])
+                offset_result = profile[self.result_left_offset:]
+                smooth_result = plotting_tools.smooth_results(np.array(offset_result))
+                self.results[eachDomain]["max_vals"].append(np.max(smooth_result))
+
+    def forceAspect(self, ax,aspect=1):
+        #aspect is width/height
+        scale_str = ax.get_yaxis().get_scale()
+        xmin,xmax = ax.get_xlim()
+        ymin,ymax = ax.get_ylim()
+        if scale_str=='linear':
+            asp = abs((xmax-xmin)/(ymax-ymin))/aspect
+        elif scale_str=='log':
+            asp = abs((scipy.log(xmax)-scipy.log(xmin))/(scipy.log(ymax)-scipy.log(ymin)))/aspect
+        ax.set_aspect(asp)
+    
+    def generate(self):
+
+        self.load_data()
+        if self.results is None:
+            return
+
+        colorscale = np.linspace(0, 1, len(self.domains))
+        colors = [self.colormap(i) for i in colorscale]
+
+        # Density
+        self.fig, ax = plt.subplots()
+        self.fig.ax = ax
+        ax.set_xlabel("Time (hours)")
+        ax.set_ylabel("Max Tip Density x 10-6 um^3")
+        ax.set_ylim([0, 1])
+        ax.set_xlim([0, 90])
+        self.forceAspect(ax, 2)
+        for idx, eachDomain in enumerate(self.domains):
+            times = np.array(self.results[eachDomain]["times"])
+            vals = 1e6*np.array(self.results[eachDomain]["max_vals"])
+            ax.plot(times, vals, color=colors[idx], lw=3, label=eachDomain.replace("_",""))    
+        handles, labels = ax.get_legend_handles_labels()
+        #ax.legend(handles, labels) 
+        #ax.legend(frameon=False)               
+        self.fig.savefig(self.filename+"/max_tip_density.png", bbox_inches='tight', dpi=self.resolution)
+    def write(self):
+        pass
+    
+
+class MaxConcPlot(PostProcessingTask):
+
+    def __init__(self, work_dir, study, domains, num_random, params, filename):
+
+        super(MaxConcPlot, self).__init__(work_dir)
+
+        self.study = study
+        self.colormap = plt.cm.Accent
+        self.domains = domains
+        self.params = params
+        self.num_random = num_random
+        self.result_left_offset = 0
+        self.results = None
+        self.fig = None
+        self.x_title = r""
+        self.filename = filename
+        self.work_dir = work_dir
+
+    def load_data(self):
+
+        self.results = {}
+
+        for eachDomain in self.domains:
+            self.results[eachDomain] = {"times": [],
+                                        "max_vals": []}
+            simulation_dir = plotting_tools.get_path(self.work_dir,
+                                                     self.study,
+                                                     eachDomain,
+                                                     str(0))
+            pc = SimulationParameterCollection()
+            if not os.path.isfile(simulation_dir + "input_parameters.p"):
+                continue
+            pc.load(simulation_dir + "input_parameters.p")
+            extension = "vtu"
+            if ("Planar" in eachDomain) and (not "Finite" in eachDomain):
+                extension = "vti"
+
+            vegf_files = glob.glob(simulation_dir + "/Vegf_Solution*."+extension)
+            vegf_files.sort(key=lambda f: int(filter(str.isdigit, os.path.basename(str(f)))))
+            for eachFile in vegf_files:
+                time = filter(lambda x: x.isdigit(), os.path.basename(eachFile))
+                print os.path.basename(eachFile), time
+                self.results[eachDomain]["times"].append(time)
+
+                if extension=="vtu":
+                    reader = vtk.vtkXMLUnstructuredGridReader()
+                    reader.SetFileName(eachFile)
+                    reader.Update()
+                else:
+                    reader = vtk.vtkXMLImageDataReader()
+                    reader.SetFileName(eachFile)
+                    reader.Update()
+                data_set = reader.GetOutput()
+                solution = data_set.GetPointData().GetArray("vegf")
+                max_val = 0.0
+                for idx in range(solution.GetNumberOfTuples()):
+                    point_soln = solution.GetTuple1(idx)
+                    if point_soln > max_val:
+                        max_val = point_soln
+                self.results[eachDomain]["max_vals"].append(max_val)
+
+    def forceAspect(self, ax,aspect=1):
+        #aspect is width/height
+        scale_str = ax.get_yaxis().get_scale()
+        xmin,xmax = ax.get_xlim()
+        ymin,ymax = ax.get_ylim()
+        if scale_str=='linear':
+            asp = abs((xmax-xmin)/(ymax-ymin))/aspect
+        elif scale_str=='log':
+            asp = abs((scipy.log(xmax)-scipy.log(xmin))/(scipy.log(ymax)-scipy.log(ymin)))/aspect
+        ax.set_aspect(asp)
+    
+    def generate(self):
+
+        self.load_data()
+        if self.results is None:
+            return
+
+        colorscale = np.linspace(0, 1, len(self.domains))
+        colors = [self.colormap(i) for i in colorscale]
+
+        # Density
+        self.fig, ax = plt.subplots()
+        self.fig.ax = ax
+        ax.set_xlabel("Time (hours)")
+        ax.set_ylabel("Concentration (nM)")
+        ax.set_ylim([0, 20])
+        ax.set_xlim([0, 90])
+        self.forceAspect(ax, 2)
+        for idx, eachDomain in enumerate(self.domains):
+            times = np.array(self.results[eachDomain]["times"])
+            vals = 1e-6*np.array(self.results[eachDomain]["max_vals"])
+            ax.plot(times, vals, color=colors[idx], lw=3, label=eachDomain.replace("_",""))    
+        handles, labels = ax.get_legend_handles_labels()
+#         ax.legend(handles, labels) 
+#         ax.legend(frameon=False)               
+        self.fig.savefig(self.filename+"/concentrations.png", bbox_inches='tight', dpi=self.resolution)
+    def write(self):
+        pass
+    
+    
+class FrontPosPlot(PostProcessingTask):
+
+    def __init__(self, work_dir, study, domains, num_random, params, filename):
+
+        super(FrontPosPlot, self).__init__(work_dir)
+
+        self.study = study
+        self.colormap = plt.cm.Accent
+        self.domains = domains
+        self.params = params
+        self.num_random = num_random
+        self.result_left_offset = 0
+        self.results = None
+        self.fig = None
+        self.x_title = r""
+        self.filename = filename
+        self.work_dir = work_dir
+
+    def load_data(self):
+
+        self.results = {}
+
+        for eachDomain in self.domains:
+            self.results[eachDomain] = {"times": [],
+                                        "max_vals": []}
+            simulation_dir = plotting_tools.get_path(self.work_dir,
+                                                     self.study,
+                                                     eachDomain,
+                                                     str(0))
+            pc = SimulationParameterCollection()
+            if not os.path.isfile(simulation_dir + "input_parameters.p"):
+                continue
+            pc.load(simulation_dir + "input_parameters.p")
+            locations, values = plotting_tools.process_csv(simulation_dir + "Sampled_Tip_density.txt")
+            sampled_values = values[::1]
+
+            for eachTimeStep in sampled_values:
+                self.results[eachDomain]["times"].append(eachTimeStep[0])
+                profile = np.array(eachTimeStep[1])
+                offset_result = profile[self.result_left_offset:]
+                smooth_result = plotting_tools.smooth_results(np.array(offset_result))
+                offset_locations = locations[self.result_left_offset:]
+
+                max_arg = np.argmax(smooth_result)
+                mid_val = smooth_result[max_arg]/2.0
+
+                diff = 1.e12
+                result_size = len(smooth_result)
+                mid_index = result_size-1
+                for kdx in range(result_size):
+                    check_index = result_size-1-kdx
+                    if abs(smooth_result[check_index] - mid_val) < diff:
+                        diff = abs(smooth_result[check_index] - mid_val)
+                        if check_index >= max_arg:
+                            mid_index = check_index
+
+                min_val = 0.01*smooth_result[max_arg]
+                diff = 1.e12
+                min_index = result_size-1
+                for kdx in range(result_size):
+                    check_index = result_size-1-kdx
+                    if abs(smooth_result[check_index] - min_val) <= diff:
+                        diff = abs(smooth_result[check_index] - min_val)
+                        if check_index >= mid_index:
+                            min_index = check_index
+                self.results[eachDomain]["max_vals"].append(offset_locations[min_index])                 
+
+    def forceAspect(self, ax,aspect=1):
+        #aspect is width/height
+        scale_str = ax.get_yaxis().get_scale()
+        xmin,xmax = ax.get_xlim()
+        ymin,ymax = ax.get_ylim()
+        if scale_str=='linear':
+            asp = abs((xmax-xmin)/(ymax-ymin))/aspect
+        elif scale_str=='log':
+            asp = abs((scipy.log(xmax)-scipy.log(xmin))/(scipy.log(ymax)-scipy.log(ymin)))/aspect
+        ax.set_aspect(asp)
+    
+    def generate(self):
+
+        self.load_data()
+        if self.results is None:
+            return
+
+        colorscale = np.linspace(0, 1, len(self.domains))
+        colors = [self.colormap(i) for i in colorscale]
+
+        # Density
+        self.fig, ax = plt.subplots()
+        self.fig.ax = ax
+        ax.set_xlabel("Time (hours)")
+        ax.set_ylabel("Location (um)")
+#         ax.set_ylim([0, 1])
+#         ax.set_xlim([0, 90])
+        #self.forceAspect(ax, 2)
+        for idx, eachDomain in enumerate(self.domains):
+            times = np.array(self.results[eachDomain]["times"])
+            vals = np.array(self.results[eachDomain]["max_vals"])
+            ax.plot(times, vals, color=colors[idx], lw=3, label=eachDomain.replace("_",""))    
+        handles, labels = ax.get_legend_handles_labels()
+        #ax.legend(handles, labels) 
+        #ax.legend(frameon=False)               
+        self.fig.savefig(self.filename+"/front_location.png", bbox_inches='tight', dpi=self.resolution)
     def write(self):
         pass
         

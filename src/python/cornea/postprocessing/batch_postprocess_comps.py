@@ -113,4 +113,49 @@ class PostProcessingTaskManager(object):
                                            self.parameters,
                                            fig_dir)
             self.tasks.append(task)
+            
+    def setup_max_tip_density_plots(self):
+        
+        for eachStudy in self.study_data["study_names"]:        
+            local_work_dir = get_path(self.work_dir, eachStudy)
+            fig_dir = local_work_dir + "/max_density_plots/"
+            if not os.path.exists(fig_dir):
+                os.makedirs(fig_dir)
+            task = plot_collection.MaxTipDensityPlot(self.work_dir,
+                                           eachStudy,
+                                           self.study_data["domain_types"],
+                                           len(self.study_data["random_seeds"]),
+                                           self.parameters,
+                                           fig_dir)
+            self.tasks.append(task)
+            
+    def setup_max_conc_plots(self):
+        
+        for eachStudy in self.study_data["study_names"]:        
+            local_work_dir = get_path(self.work_dir, eachStudy)
+            fig_dir = local_work_dir + "/max_conc_plots/"
+            if not os.path.exists(fig_dir):
+                os.makedirs(fig_dir)
+            task = plot_collection.MaxConcPlot(self.work_dir,
+                                           eachStudy,
+                                           self.study_data["domain_types"],
+                                           len(self.study_data["random_seeds"]),
+                                           self.parameters,
+                                           fig_dir)
+            self.tasks.append(task)
+            
+    def setup_front_pos_plots(self):
+        
+        for eachStudy in self.study_data["study_names"]:        
+            local_work_dir = get_path(self.work_dir, eachStudy)
+            fig_dir = local_work_dir + "/front_position/"
+            if not os.path.exists(fig_dir):
+                os.makedirs(fig_dir)
+            task = plot_collection.FrontPosPlot(self.work_dir,
+                                           eachStudy,
+                                           self.study_data["domain_types"],
+                                           len(self.study_data["random_seeds"]),
+                                           self.parameters,
+                                           fig_dir)
+            self.tasks.append(task)
 
