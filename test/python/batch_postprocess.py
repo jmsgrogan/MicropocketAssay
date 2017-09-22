@@ -42,11 +42,11 @@ chaste.init(comm=local_comm)
 if rank == 0:
 
     # Master process executes code below
-    work_dir = "Python/Cornea/Submission/Fig5/"
+    work_dir = "Submission/Fig7/"
     tm = PostProcessingTaskManager(work_dir)
-    #tm.setup_density_line_plots()
-    #tm.setup_line_density_plot_merge()
-    tm.setup_box_plots()
+    tm.setup_density_line_plots()
+    tm.setup_line_density_plot_merge()
+    #tm.setup_box_plots()
     #tm.setup_max_tip_density_plots()
     #tm.setup_max_conc_plots()
     #tm.setup_front_pos_plots()

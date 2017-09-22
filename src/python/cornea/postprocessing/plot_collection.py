@@ -29,7 +29,7 @@ _location_plot_keys = {"location_min": "Front Position (um)",
 
 class PostProcessingTask(object):
 
-    def __init__(self, work_dir, colormap=plt.cm.viridis, resolution=180):
+    def __init__(self, work_dir, colormap=plt.cm.Dark2, resolution=180):
 
         self.work_dir = work_dir
         self.colormap = colormap
@@ -210,7 +210,7 @@ class DensityLinePlot(PostProcessingTask):
         if "Tip" in self.param.name:
             y_max = 600
         elif "Line" in self.param.name:
-            y_max = 120
+            y_max = 160
         else:
             y_max = ax.get_ylim()[1]
 
