@@ -8,7 +8,6 @@ from PIL import Image
 from microvessel_chaste.utility import *
 
 from cornea.parameters.parameter_collection import SimulationParameterCollection
-import cornea.analytical_solutions.solution_collection
 from cornea.postprocessing import plotting_tools
 from cornea.postprocessing import sampling_grid
 
@@ -16,15 +15,6 @@ from cornea.postprocessing import sampling_grid
 matplotlib.rcParams.update({'font.size': 18})
 matplotlib.rcParams['axes.linewidth'] = 2.0  # set the value globally
 plt.locator_params(nticks=4)
-
-_density_plot_keys = {"Line_density": r"Line Density - $\mu m$ per $\mu m^3$",
-                      "Tip_density": r"Tip Density - $\mu m^{-3}$",
-                      "PDE": r"Concentration - nanomolar"}
-
-_location_plot_keys = {"location_min": "Front Position (um)",
-                       "location_mid": "Mid Position (um)",
-                       "location_max": "Max Position (um)",
-                       "density_max": "Max Density (um^-3)"}
 
 
 class PostProcessingTask(object):
@@ -115,7 +105,6 @@ class DensityLinePlot(PostProcessingTask):
         self.results = None
         self.fig = None
         self.x_title = r"Position - $\mu m$"
-        self.analytical_solution = None
         self.filename = filename
 
     def load_data(self):
@@ -172,45 +161,29 @@ class DensityLinePlot(PostProcessingTask):
             if self.param.limits[1] is not None:
                 ax.set_ylim(self.param.limits[1])
         self.get_line_properties()
-
         self.fig.ax.axvline(self.left_line_loc,
                             color=self.left_line_color, lw=3.0)
         self.fig.ax.axvline(self.right_line_loc,
                             color=self.right_line_color, lw=3.0)
 
-        #ax.set_xlabel(self.x_title)
-        #ax.set_ylabel(_density_plot_keys[self.param.name])
-        max_result = 0.0
         colorscale = np.linspace(0, 1, len(self.results))
         colors = [self.colormap(i) for i in colorscale]
-
         result_factor = 1.0
         if "Tip" in self.param.name:
-            result_factor = 1.e-8
+            result_factor = 1.e-8  # Scale for nicer axis values
         elif "Line" in self.param.name:
-            result_factor = 1.e-5
+            result_factor = 1.e-5  # Scale for nicer axis values
 
         for jdx, eachTimeStep in enumerate(self.results):
             time, results, locations = eachTimeStep
             smooth_result = plotting_tools.smooth_results(np.array(results))
             if "Tip" in self.param.name:
                 print "Max density: ", self.domain, " t: ", time, " d: ", 1.e6*np.max(smooth_result)
-            
-            if self.analytical_solution is not None:
-                analytical_method = getattr(cornea.analytical_solutions.solution_collection,
-                                            self.analytical_solution)
-                ana_results = analytical_method(locations, time, self.pc)
-                self.fig.ax.plot(locations, ana_results/result_factor, color='black', lw=3.0)
             self.fig.ax.plot(locations, smooth_result/result_factor, color=colors[jdx], lw=3.0)
-            local_max = np.max(smooth_result/result_factor)
-            if local_max > max_result:
-                max_result = local_max
-        #ylim = ax.get_ylim()
-        #self.fig.ax.set_ylim([0, ylim[1]])
         if "Tip" in self.param.name:
-            y_max = 600
+            y_max = 600  # Modify for each Case
         elif "Line" in self.param.name:
-            y_max = 160
+            y_max = 160  # Modify for each Case
         else:
             y_max = ax.get_ylim()[1]
 
@@ -308,11 +281,8 @@ class BoxPlot(PostProcessingTask):
         if self.results is None:
             return
 
-        colorscale = np.linspace(0, 1, len(self.domains))
-        colors = [self.colormap(i) for i in colorscale]
         width = 1.0
-        alpha = 0.1
-        
+        alpha = 0.3
         domain_abbreviations = {"Planar_2D": "P2D",
                        "Planar_2D_Finite": "P2DF",
                        "Circle_2D": "C2D",
@@ -343,24 +313,17 @@ class BoxPlot(PostProcessingTask):
         ax.set_xlim([0, 1200])
         self.fig.savefig(self.filename+"locations.png", bbox_inches='tight', dpi=self.resolution)
         
-        # Density
+        # Tip Density
         width = 6.0
-        alpha = 0.5
-        
+        alpha = 0.5 
         self.fig, ax = plt.subplots()
         self.fig.ax = ax
         ax.set_xlabel("Tip Density (1e6 um^-3)")
-        ax.set_xlim([0, 1.5])  # Fig 5
-        #ax.set_xlim([0, 20])  # Fig 4
+        #ax.set_xlim([0, 2.5])  # Fig 5
+        ax.set_xlim([0, 20])  # Fig 4
+        ax.set_xlim([0, 12])  # Fig 4
         ind = 6.0*np.arange(len(self.domains))
-        tick_marks = list(ind)
-        tick_marks.extend(list(ind+48.0))
-        
-        #ax.set_xticks(tick_marks)
-        tick_labels = [domain_abbreviations[x] for x in self.domains]
-        tick_labels.extend([domain_abbreviations[x] for x in self.domains])
         ax.get_yaxis().set_visible(False)
-        #ax.set_xticklabels(tick_labels)
         for idx, eachDomain in enumerate(self.domains):
             results = np.array(self.results[eachDomain][0]["density_max"])
             print "Density ", eachDomain, " mean: ",  1.e6*np.mean(results), " err: ",  1.e6*np.std(results)
@@ -368,32 +331,22 @@ class BoxPlot(PostProcessingTask):
             ax.invert_yaxis()   
         self.fig.savefig(self.filename+"tip_density.png", bbox_inches='tight', dpi=self.resolution)        
 
+        # Line Density
         width = 6.0
         alpha = 0.5
-
-        # Density
         self.fig, ax = plt.subplots()
         self.fig.ax = ax
         ax.set_xlabel("Line Density (1e3 um^-2)")
         ax.set_xlim([0, 3.0])   # Fig 4
-        ax.set_xlim([0, 0.3])   # Fig 5
+        ax.set_xlim([0, 2.0])   # Fig 4
+        #ax.set_xlim([0, 0.5])   # Fig 5
         ind = 6.0*np.arange(len(self.domains))
-        tick_marks = list(ind)
-        tick_marks.extend(list(ind+48.0))
-        
-        #ax.set_xticks(tick_marks)
-        tick_labels = [domain_abbreviations[x] for x in self.domains]
-        tick_labels.extend([domain_abbreviations[x] for x in self.domains])
         ax.get_yaxis().set_visible(False)
-        #ax.set_xticklabels(tick_labels)
         for idx, eachDomain in enumerate(self.domains):
             results = np.array(self.results[eachDomain][1]["density_max"])
             ax.barh(ind[idx] + 0.0*width, 1.e3*np.mean(results), width, color='lightsteelblue', xerr=1.e3*np.std(results), alpha=alpha, edgecolor='black')
             ax.invert_yaxis()   
         self.fig.savefig(self.filename+"line_density.png", bbox_inches='tight', dpi=self.resolution)
-
-    def write(self):
-        pass
 
 
 class PdePlot(PostProcessingTask):
@@ -417,8 +370,6 @@ class PdePlot(PostProcessingTask):
     def load_data(self):
 
         self.results = {}
-
-        params = ["Tip", "Line"]
         for eachDomain in self.domains:
             self.results[eachDomain] = {"line_frac": [],
                                         "angle": []}
@@ -432,7 +383,6 @@ class PdePlot(PostProcessingTask):
                     continue
                 pc.load(simulation_dir + "input_parameters.p")
                 last_file = max(glob.glob(simulation_dir + "/sampled_density*.vtu"))
-                print "last", last_file
                 line_fraction, angle = sampling_grid.GetDensityMetrics(last_file, eachDomain, pc)
                 sampling_grid.DoLineSampling(last_file, eachDomain, pc)
                 self.results[eachDomain]["line_frac"].append(line_fraction)
@@ -457,7 +407,7 @@ class PdePlot(PostProcessingTask):
                        "Circle_3D": "C3D",
                        "Hemisphere": "H"}
 
-        # Density
+        # Vascularized Fraction
         self.fig, ax = plt.subplots()
         self.fig.ax = ax
         ax.set_ylabel("Vascularized Fraction")
@@ -470,21 +420,6 @@ class PdePlot(PostProcessingTask):
             print "vasc frac ", eachDomain, " : ", np.mean(results)
             ax.bar(ind[idx] + 0.0*width, np.mean(results), width, color=colors[idx], yerr=np.std(results), alpha=alpha, edgecolor='black')                    
         self.fig.savefig(self.filename+"/vascularized_fraction.png", bbox_inches='tight', dpi=self.resolution)
-
-        # Angle
-        self.fig, ax = plt.subplots()
-        self.fig.ax = ax
-        ax.set_ylabel("Opening Angle")
-        ind = np.arange(len(self.domains))
-        ax.set_xticks(ind + width)
-        ax.set_xticklabels([domain_abbreviations[x] for x in self.domains])
-        for idx, eachDomain in enumerate(self.domains):
-            results = np.array(self.results[eachDomain]["angle"])
-            ax.bar(ind[idx] + 0.0*width, np.mean(results), width, color=colors[idx], yerr=np.std(results), alpha=alpha, edgecolor='black')                    
-        self.fig.savefig(self.filename+"/opening_angle.png", bbox_inches='tight', dpi=self.resolution)
-
-    def write(self):
-        pass
 
 
 class MaxTipDensityPlot(PostProcessingTask):
@@ -520,7 +455,7 @@ class MaxTipDensityPlot(PostProcessingTask):
             if not os.path.isfile(simulation_dir + "input_parameters.p"):
                 continue
             pc.load(simulation_dir + "input_parameters.p")
-            locations, values = plotting_tools.process_csv(simulation_dir + "Sampled_Tip_density.txt")
+            _, values = plotting_tools.process_csv(simulation_dir + "Sampled_Tip_density.txt")
             sampled_values = values[::1]
 
             for eachTimeStep in sampled_values:
@@ -530,15 +465,12 @@ class MaxTipDensityPlot(PostProcessingTask):
                 smooth_result = plotting_tools.smooth_results(np.array(offset_result))
                 self.results[eachDomain]["max_vals"].append(np.max(smooth_result))
 
-    def forceAspect(self, ax,aspect=1):
+    def force_aspect(self, ax, aspect=1):
+        
         #aspect is width/height
-        scale_str = ax.get_yaxis().get_scale()
         xmin,xmax = ax.get_xlim()
         ymin,ymax = ax.get_ylim()
-        if scale_str=='linear':
-            asp = abs((xmax-xmin)/(ymax-ymin))/aspect
-        elif scale_str=='log':
-            asp = abs((scipy.log(xmax)-scipy.log(xmin))/(scipy.log(ymax)-scipy.log(ymin)))/aspect
+        asp = abs((xmax-xmin)/(ymax-ymin))/aspect
         ax.set_aspect(asp)
     
     def generate(self):
@@ -555,9 +487,9 @@ class MaxTipDensityPlot(PostProcessingTask):
         self.fig.ax = ax
         ax.set_xlabel("Time (hours)")
         ax.set_ylabel("Max Tip Density x 10-6 um^3")
-        ax.set_ylim([0, 1])
+        ax.set_ylim([0, 8])
         ax.set_xlim([0, 90])
-        self.forceAspect(ax, 2)
+        self.force_aspect(ax, 2)
         for idx, eachDomain in enumerate(self.domains):
             times = np.array(self.results[eachDomain]["times"])
             vals = 1e6*np.array(self.results[eachDomain]["max_vals"])
@@ -631,15 +563,11 @@ class MaxConcPlot(PostProcessingTask):
                         max_val = point_soln
                 self.results[eachDomain]["max_vals"].append(max_val)
 
-    def forceAspect(self, ax,aspect=1):
-        #aspect is width/height
-        scale_str = ax.get_yaxis().get_scale()
+    def force_aspect(self, ax,aspect=1):
+
         xmin,xmax = ax.get_xlim()
         ymin,ymax = ax.get_ylim()
-        if scale_str=='linear':
-            asp = abs((xmax-xmin)/(ymax-ymin))/aspect
-        elif scale_str=='log':
-            asp = abs((scipy.log(xmax)-scipy.log(xmin))/(scipy.log(ymax)-scipy.log(ymin)))/aspect
+        asp = abs((xmax-xmin)/(ymax-ymin))/aspect
         ax.set_aspect(asp)
     
     def generate(self):
@@ -651,24 +579,21 @@ class MaxConcPlot(PostProcessingTask):
         colorscale = np.linspace(0, 1, len(self.domains))
         colors = [self.colormap(i) for i in colorscale]
 
-        # Density
         self.fig, ax = plt.subplots()
         self.fig.ax = ax
         ax.set_xlabel("Time (hours)")
         ax.set_ylabel("Concentration (nM)")
         ax.set_ylim([0, 20])
         ax.set_xlim([0, 90])
-        self.forceAspect(ax, 2)
+        self.force_aspect(ax, 2)
         for idx, eachDomain in enumerate(self.domains):
             times = np.array(self.results[eachDomain]["times"])
-            vals = 1e-6*np.array(self.results[eachDomain]["max_vals"])
+            vals = np.array(self.results[eachDomain]["max_vals"])
             ax.plot(times, vals, color=colors[idx], lw=3, label=eachDomain.replace("_",""))    
         handles, labels = ax.get_legend_handles_labels()
 #         ax.legend(handles, labels) 
 #         ax.legend(frameon=False)               
         self.fig.savefig(self.filename+"/concentrations.png", bbox_inches='tight', dpi=self.resolution)
-    def write(self):
-        pass
     
     
 class FrontPosPlot(PostProcessingTask):
@@ -738,15 +663,11 @@ class FrontPosPlot(PostProcessingTask):
                             min_index = check_index
                 self.results[eachDomain]["max_vals"].append(offset_locations[min_index])                 
 
-    def forceAspect(self, ax,aspect=1):
-        #aspect is width/height
-        scale_str = ax.get_yaxis().get_scale()
+    def force_aspect(self, ax, aspect=1):
+
         xmin,xmax = ax.get_xlim()
         ymin,ymax = ax.get_ylim()
-        if scale_str=='linear':
-            asp = abs((xmax-xmin)/(ymax-ymin))/aspect
-        elif scale_str=='log':
-            asp = abs((scipy.log(xmax)-scipy.log(xmin))/(scipy.log(ymax)-scipy.log(ymin)))/aspect
+        asp = abs((xmax-xmin)/(ymax-ymin))/aspect
         ax.set_aspect(asp)
     
     def generate(self):
@@ -765,7 +686,7 @@ class FrontPosPlot(PostProcessingTask):
         ax.set_ylabel("Location (um)")
 #         ax.set_ylim([0, 1])
 #         ax.set_xlim([0, 90])
-        #self.forceAspect(ax, 2)
+        #self.force_aspect(ax, 2)
         for idx, eachDomain in enumerate(self.domains):
             times = np.array(self.results[eachDomain]["times"])
             vals = np.array(self.results[eachDomain]["max_vals"])
@@ -774,6 +695,5 @@ class FrontPosPlot(PostProcessingTask):
         #ax.legend(handles, labels) 
         #ax.legend(frameon=False)               
         self.fig.savefig(self.filename+"/front_location.png", bbox_inches='tight', dpi=self.resolution)
-    def write(self):
-        pass
+
         

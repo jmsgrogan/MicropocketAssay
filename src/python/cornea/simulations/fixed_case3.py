@@ -5,21 +5,23 @@ from microvessel_chaste.utility import *
 import cornea.parameters.default_parameters
 
 study_list = []
-height = 1.0 # mm
+cp = [100.0, 20.0, 1.0] # nM
 
-for idx in range(1):
-    dimless_height = (height - 0.1*float(idx))
-    study_list.append({"name": "pde_h_"+str(int(round(dimless_height*1000.0))),
-                       "switches": {"UseFixedGradient": False,
-                                    "PelletConcentration": 1330.0e-3*mole_per_metre_cubed,
-                                    "VegfBindingConstant": 30.0,
-                                    "PelletHeight": dimless_height*1e-3*metres}})
+for idx in range(len(cp)):
+    dimless_c = cp[idx]
+    study_list.append({"name": "fg_cp_random_cp_ana_"+str(int(round(dimless_c))),
+                       "switches": {"UseFixedGradient": True,
+                                    "PelletConcentration": dimless_c*1.e-6*mole_per_metre_cubed,
+                                    "ChemotacticStrength": 0.0,
+                                    "PersistenceAngle": 20.0,
+                                    "OnlyPerfusedSprout": True,
+                                    "FinitePelletWidth": True,
+                                    "DoAnastamosis": True}})
 
 run_id = uuid.uuid4()
-master_work_dir = "Python/Cornea/Submission/Fig8_a" + str(run_id) + "/"
-random_seeds = [55746, 35758, 465334, 563327, 646354]
-domains = ["Planar_2D", "Planar_3D", "Planar_2D_Finite", "Circle_2D",
-           "Planar_3D_Finite", "Circle_3D", "Hemisphere"]
+master_work_dir = "Python/Cornea/Submission/Fixed_Case3_" + str(run_id) + "/"
+random_seeds = [23535, 7657546, 45353, 6675, 86327]
+domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
 study_names = [x["name"] for x in study_list]
 study_data = {"random_seeds": random_seeds,
               "domain_types": domains,

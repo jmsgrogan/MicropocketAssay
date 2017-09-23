@@ -14,7 +14,7 @@ import pickle
 import chaste
 import microvessel_chaste.simulation
 from microvessel_chaste.utility import *
-from cornea.simulations.fig8 import study, master_work_dir, study_data
+from cornea.simulations.fixed_case5 import study, master_work_dir, study_data
 from mpi4py import MPI
 
 
@@ -87,7 +87,6 @@ else:
             # Do the work here
             print "Parent rank", comm.Get_rank()
             print "Worker rank", local_comm.Get_rank()
-            print "Chaste rank", chaste.chaste.core.PetscTools.GetMyRank()
 
             study, run_number, domain, pc, work_dir = task
 

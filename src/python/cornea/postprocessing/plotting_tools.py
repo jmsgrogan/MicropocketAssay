@@ -4,12 +4,16 @@ import glob
 import numpy as np
 from scipy.signal import convolve
 
+import warnings
 import chaste.core
 from microvessel_chaste.utility import *
 
 
 def smooth_results(results):
 
+    """
+    One Gaussian smoothing pass
+    """
     smooth_result = convolve(np.array(results), np.array([1, 2, 1]), 'same')/4.0
     smooth_result[0] = results[0]
     smooth_result[-1] = results[-1]
@@ -33,7 +37,9 @@ def process_csv(file_name):
                 results.append([time, samples])
 
     locs = np.array(locations)
+    # Locs manually added for Hemisphere due to old bug in Hemisphere sampling location output
     if "Hemisphere" in file_name:
+        warnings.warn("Reminder: Hemisphere sampling locations have been manually added. They need to be changed if sample spacing is modified.")
         locs = np.array([   27.41937131,    82.25410086,   137.07673098,   191.8790066,    246.6523757,
                                 301.38787643,   356.07596741,   410.70638359,   465.26798036,   519.74847022,
                                 574.13420342,   628.40989764,   682.55818963,   736.55924316,   790.39021913,

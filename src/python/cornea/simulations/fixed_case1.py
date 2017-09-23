@@ -5,7 +5,7 @@ from microvessel_chaste.utility import *
 import cornea.parameters.default_parameters
 
 study_list = []
-cp = [100.0,] # nM
+cp = [100.0, 20.0, 1.0]  # nM
 
 for idx in range(len(cp)):
     dimless_c = cp[idx]
@@ -14,16 +14,14 @@ for idx in range(len(cp)):
                                     "PelletConcentration": dimless_c*1.e-6*mole_per_metre_cubed,
                                     "ChemotacticStrength": 1.0,
                                     "PersistenceAngle": 0.0,
-                                    "SproutingProbability": (1000.0 /3600.0)*per_second,
                                     "OnlyPerfusedSprout": True,
                                     "FinitePelletWidth": True,
                                     "DoAnastamosis": False}})
 
 run_id = uuid.uuid4()
-master_work_dir = "Python/Cornea/full_activation_" + str(run_id) + "/"
-random_seeds = [1234, 4567, 891011]
+master_work_dir = "Python/Cornea/Submission/Fixed_Case1_" + str(run_id) + "/"
+random_seeds = [1234, 5678, 9101112, 3463463, 234234]
 domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
-#domains = ["Planar_2D"]
 study_names = [x["name"] for x in study_list]
 study_data = {"random_seeds": random_seeds,
               "domain_types": domains,

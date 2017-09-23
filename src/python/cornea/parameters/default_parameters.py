@@ -69,7 +69,7 @@ _default_collection.add_parameter(Parameter("PersistenceAngle", 5.0,
                                             nice_name="Persistence Angle"))
 _default_collection.add_parameter(Parameter("TipVelocity", 10.0 *(1.e-6/3600.0) * metre_per_second, 
                                            min_val = 0.1, max_val = 4.0, symbol = "v", 
-                                           nice_name = "Persistence Angle"))
+                                           nice_name = "Tip Velocity"))
 _default_collection.add_parameter(Parameter("AnastamosisRadius", 5.0*1.e-6*metres,
                                            nice_name = "Anastamosis Radius")) 
 _default_collection.add_parameter(Parameter("CellLength", 20.0*1.e-6*metres,

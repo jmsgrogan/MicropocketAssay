@@ -5,22 +5,22 @@ from microvessel_chaste.utility import *
 import cornea.parameters.default_parameters
 
 study_list = []
-cp = [100.0, 20.0, 1.0]  # nM
+cp = [100.0, 20.0, 1.0] # nM
 
 for idx in range(len(cp)):
     dimless_c = cp[idx]
-    study_list.append({"name": "fg_cp_"+str(int(round(dimless_c))),
+    study_list.append({"name": "fg_cp_random_cp_ana_"+str(int(round(dimless_c))),
                        "switches": {"UseFixedGradient": True,
                                     "PelletConcentration": dimless_c*1.e-6*mole_per_metre_cubed,
-                                    "ChemotacticStrength": 1.0,
-                                    "PersistenceAngle": 0.0,
+                                    "ChemotacticStrength": 0.0,
+                                    "PersistenceAngle": 20.0,
                                     "OnlyPerfusedSprout": True,
                                     "FinitePelletWidth": True,
                                     "DoAnastamosis": False}})
 
 run_id = uuid.uuid4()
-master_work_dir = "Python/Cornea/Submission/Fig3_" + str(run_id) + "/"
-random_seeds = [1234, 5678, 9101112, 3463463, 234234]
+master_work_dir = "Python/Cornea/Submission/Fixed_Case2_" + str(run_id) + "/"
+random_seeds = [464634, 23545, 857684, 345236, 5443]
 domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
 study_names = [x["name"] for x in study_list]
 study_data = {"random_seeds": random_seeds,

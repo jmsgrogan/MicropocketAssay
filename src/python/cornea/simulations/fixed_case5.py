@@ -14,11 +14,11 @@ for idx in range(len(cp)):
                                     "PelletConcentration": dimless_c*1.e-6*mole_per_metre_cubed,
                                     "OnlyPerfusedSprout": False,
                                     "FinitePelletWidth": True,
-                                    "DoAnastamosis": False}})
+                                    "DoAnastamosis": True}})
 
 run_id = uuid.uuid4()
-master_work_dir = "Python/Cornea/Submission/Fig6_" + str(run_id) + "/"
-random_seeds = [56456, 3453476, 83868, 463734, 28285]
+master_work_dir = "Python/Cornea/Submission/Fixed_Case5_" + str(run_id) + "/"
+random_seeds = [55235, 3323, 9101112, 239823, 42829293]
 domains = ["Planar_2D", "Circle_2D", "Planar_3D", "Circle_3D", "Hemisphere"]
 study_names = [x["name"] for x in study_list]
 study_data = {"random_seeds": random_seeds,

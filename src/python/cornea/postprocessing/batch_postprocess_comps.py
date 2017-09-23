@@ -3,7 +3,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import chaste
 from microvessel_chaste.utility import *
-import cornea.analytical_solutions
 from cornea.postprocessing.plotting_tools import *
 from cornea.postprocessing import plot_collection
 
@@ -48,10 +47,6 @@ class PostProcessingTaskManager(object):
                                                                idx,
                                                                eachParam,
                                                                fig_path)
-#                         if "Tip" in eachParam.name:
-#                             task.analytical_solution = 'get_tip_density_high_velocity'
-#                         if "Line" in eachParam.name:
-#                             task.analytical_solution = 'get_line_density_high_velocity'
                         self.tasks.append(task)
 
     def setup_line_density_plot_merge(self):

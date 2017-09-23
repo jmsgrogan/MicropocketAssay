@@ -8,13 +8,9 @@ This example was contributed by Craig Finch (cfinch@ieee.org).
 Inspired by http://math.acadiau.ca/ACMMaC/Rmpi/index.html
 """
 
-import os
 import time
-import pickle
 import chaste
-import microvessel_chaste.simulation
 from microvessel_chaste.utility import *
-#from cornea.simulations.fg_vary_cp import study, master_work_dir, study_data
 from cornea.postprocessing.batch_postprocess_comps import PostProcessingTaskManager
 
 from mpi4py import MPI
@@ -42,15 +38,16 @@ chaste.init(comm=local_comm)
 if rank == 0:
 
     # Master process executes code below
-    work_dir = "Submission/Fig7/"
+    work_dir = "Python/Cornea/Submission/Fixed_Case5"
+    #work_dir = "Python/Cornea/Submission/Dynamic_Case1"
     tm = PostProcessingTaskManager(work_dir)
-    tm.setup_density_line_plots()
-    tm.setup_line_density_plot_merge()
-    #tm.setup_box_plots()
-    #tm.setup_max_tip_density_plots()
-    #tm.setup_max_conc_plots()
-    #tm.setup_front_pos_plots()
-    #tm.setup_pde_plots()
+    #tm.setup_density_line_plots()
+    #tm.setup_line_density_plot_merge()  # serial only
+    tm.setup_box_plots()  # serial only
+    #tm.setup_max_tip_density_plots()  # serial only
+    #tm.setup_max_conc_plots()  # serial only
+    #tm.setup_front_pos_plots()  # serial only
+    #tm.setup_pde_plots()  # serial only, dynamic only
 
     tasks = tm.tasks
     task_index = 0
@@ -93,7 +90,6 @@ else:
             # Do the work here
             print "Parent rank", comm.Get_rank()
             print "Worker rank", local_comm.Get_rank()
-            print "Chaste rank", chaste.chaste.core.PetscTools.GetMyRank()
 
             task.generate()
 
